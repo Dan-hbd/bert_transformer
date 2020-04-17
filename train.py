@@ -214,6 +214,7 @@ def main():
 
     n_params = sum([p.nelement() for p in model.parameters()])
     print('* number of parameters: %d' % n_params)
+    print("the model:",model)
 
     if len(opt.gpus) > 1 or opt.virtual_gpu > 1:
         raise NotImplementedError("Warning! Multi-GPU training is not fully tested and potential bugs can happen.")
