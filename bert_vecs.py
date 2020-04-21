@@ -44,7 +44,6 @@ def bert_make_vecs(batch):
     # tokens_tensor = torch.cat((tokens_start,batch,tokens_end ),0)
 
     # 【sent_length, batch_size】=> [batch_size, sent_length ]
-
     tokens_tensor = batch.t()
     batch_size = tokens_tensor.size(0)
     segments_tensor = tokens_tensor.ne(onmt.Constants.PAD)

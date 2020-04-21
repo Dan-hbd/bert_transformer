@@ -13,6 +13,7 @@ import h5py as h5
 import numpy as np
 import apex
 
+
 parser = argparse.ArgumentParser(description='translate.py')
 onmt.Markdown.add_md_help_argument(parser)
 
@@ -257,6 +258,7 @@ def main():
             src_batch, tgt_batch = [], []
     # Text processing
     else:
+        # addone 这里设置为可迭代， 因为我们设置batch_size 的长度
         for line in addone(in_file):
             if line is not None:
                 if opt.input_type == 'word':
@@ -266,6 +268,7 @@ def main():
                 else:
                     raise NotImplementedError("Input type unknown")
                 src_batch += [src_tokens]
+                # tgtF:None
                 if tgtF:
                     # ~ tgt_tokens = tgtF.readline().split() if tgtF else None
                     if opt.input_type == 'word':
@@ -275,11 +278,11 @@ def main():
                     else:
                         raise NotImplementedError("Input type unknown")
                     tgt_batch += [tgt_tokens]
-
                 if len(src_batch) < opt.batch_size:
                     continue
             else:
                 # at the end of file, check last batch
+                # 我们的文件 src_batch 是一个list,正常len不为0
                 if len(src_batch) == 0:
                     break
 
@@ -381,6 +384,7 @@ def translateBatch(opt, tgtF, count, outF, translator, src_batch, tgt_batch, pre
                     out_str = "%s ||| %.4f" % (" ".join(pred_batch[b][idx]), pred_score[b][idx])
                     print(out_str)
             print('')
+
     return count, pred_score_total, pred_words_total, gold_score_total, gold_words_total
 
 

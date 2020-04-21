@@ -9,6 +9,7 @@ from onmt.modules.WordDrop import embedded_dropout, embedded_dropou_bert, switch
 from torch.utils.checkpoint import checkpoint
 from collections import defaultdict
 from onmt.utils import flip
+from bert_vecs import bert_make_vecs
 
 torch_version = float(torch.__version__[:3])
 
@@ -524,8 +525,6 @@ class Transformer(NMTModel):
 
         src = batch.get('source')
 
-
-
         #  src = batch.get('source_rev')
         tgt = batch.get('target_input')
         tgt_atb = batch.get('target_atb')  # a dictionary of attributes
@@ -583,6 +582,14 @@ class Transformer(NMTModel):
         """
 
         src = batch.get('source')
+
+        # by me
+        src_ids = src  # 【sent_length, batch_size】
+        bert_tok_vecs = bert_make_vecs(src_ids)  # [batch_size, sentence_length, hidden_size*4]
+        encoder_output = self.encoder(src, bert_tok_vecs)
+        context = encoder_output['context']
+
+
         tgt_input = batch.get('target_input')
         tgt_output = batch.get('target_output')
         tgt_atb = batch.get('target_atb')  # a dictionary of attributes
@@ -592,7 +599,9 @@ class Transformer(NMTModel):
         tgt_input = tgt_input.transpose(0, 1)
         batch_size = tgt_input.size(0)
 
-        context = self.encoder(src)['context']
+
+        # by me
+        # context = self.encoder(src)['context']
 
         if hasattr(self, 'autoencoder') and self.autoencoder \
                 and self.autoencoder.representation == "EncoderHiddenState":
@@ -657,10 +666,20 @@ class Transformer(NMTModel):
         :return:
         """
         src = batch.get('source')
-        tgt_atb = batch.get('target_atb')
 
-        src_transposed = src.transpose(0, 1)
-        encoder_output = self.encoder(src_transposed)
+
+        # by me
+        src_ids = src  # 【sent_length, batch_size】
+        bert_tok_vecs = bert_make_vecs(src_ids)  # [batch_size, sentence_length, hidden_size*4]
+
+
+        tgt_atb = batch.get('target_atb')
+        src_transposed = src.transpose(0, 1)  # make batch_size first
+        # encoder_output = self.encoder(src_transposed)
+
+        # by me
+        # src_transposed 和 bert_tok_vecs 都是batch first
+        encoder_output = self.encoder(src_transposed, bert_tok_vecs)
 
         decoder_state = TransformerDecodingState(src, tgt_atb, encoder_output['context'], encoder_output['src_mask'],
                                                  beam_size=beam_size, model_size=self.model_size, type=type)

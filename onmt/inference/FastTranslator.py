@@ -51,11 +51,12 @@ class FastTranslator(Translator):
         gold_words = 0
         allgold_scores = []
 
+        # we don't have target
         if batch.has_target:
             # Use the first model to decode
             model_ = self.models[0]
-
             gold_words, gold_scores, allgold_scores = model_.decode(batch)
+
 
         #  (3) Start decoding
 
@@ -189,6 +190,7 @@ class FastTranslator(Translator):
         # - expanding the context over the batch dimension len_src x (B*beam) x H
         # - expanding the mask over the batch dimension    (B*beam) x len_src
         decoder_states = dict()
+        # self.n_models = 1, 应该是average后的
         for i in range(self.n_models):
             decoder_states[i] = self.models[i].create_decoder_state(batch, beam_size, type=2)
 
