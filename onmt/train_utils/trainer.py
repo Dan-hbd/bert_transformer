@@ -281,7 +281,6 @@ class XETrainer(BaseTrainer):
                     targets = batch.get('target_output')
                     tgt_mask = targets.data.ne(onmt.Constants.PAD)
 
-
                     # outputs = self.model(batch, target_masking=tgt_mask, zero_encoder=opt.zero_encoder)
 
                     # by me

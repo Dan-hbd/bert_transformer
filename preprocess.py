@@ -90,8 +90,8 @@ parser.add_argument('-reshape_speech', type=int, default=1,
                     help="Reshaping the speech segments here. Mostly for compatibility..")
 
 opt = parser.parse_args()
-
 torch.manual_seed(opt.seed)
+
 
 def make_vocab(filenames, size, tokenizer):
     vocab = onmt.Dict([onmt.Constants.PAD_WORD, onmt.Constants.UNK_WORD,
@@ -111,7 +111,6 @@ def make_vocab(filenames, size, tokenizer):
     vocab = vocab.prune(size)
     print('Created dictionary of size %d (pruned from %d)' %
           (vocab.size(), original_size))
-
     return vocab
 
 def init_vocab(name, data_files, vocab_file, vocab_size, tokenizer, join=False):

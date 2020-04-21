@@ -381,7 +381,6 @@ def translateBatch(opt, tgtF, count, outF, translator, src_batch, tgt_batch, pre
                     out_str = "%s ||| %.4f" % (" ".join(pred_batch[b][idx]), pred_score[b][idx])
                     print(out_str)
             print('')
-
     return count, pred_score_total, pred_words_total, gold_score_total, gold_words_total
 
 

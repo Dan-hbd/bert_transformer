@@ -34,10 +34,7 @@ replace_layer_norm(bert_model, "Transformer")
 bert_model = bert_model.cuda()
 
 
-
 def bert_make_vecs(batch):
-
-
     # batch_size = batch.size(1)  # batch_size
     # tokens_start = torch.ones([1, batch_size], dtype=torch.int64)*onmt.Constants.BERT_CLS
     # tokens_start =tokens_start.cuda()
@@ -60,9 +57,9 @@ def bert_make_vecs(batch):
     bert_model.eval()
     # Predict hidden states features for each layer, no backward, so no gradient
 
-
     with torch.no_grad():
-        # encoded_layers is a list, 12 layers in total, for every element of the list : 【batch_size, sent_len, hidden_size】
+        # encoded_layers is a list, 12 layers in total, for every element of the list :
+        # 【batch_size, sent_len, hidden_size】
         encoded_layers, _ = bert_model(tokens_tensor, segments_tensor)
         # combine 12 layers to make this one whole big Tensor
 
@@ -70,7 +67,6 @@ def bert_make_vecs(batch):
         #     print(torch.nn.functional.cosine_similarity(list1,list2[0],dim=2))
 
         # token_embeddings = torch.stack(encoded_layers, dim=0)
-        # bert_vecs = torch.cat((token_embeddings[-1], token_embeddings[-2], token_embeddings[-3], token_embeddings[-4]), dim=0)
         # 高维是0， 最低维度是-1
         bert_vecs = torch.cat(encoded_layers[-4:], dim=-1)   # 【batch_size, sent_len, hidden_size*4】
 

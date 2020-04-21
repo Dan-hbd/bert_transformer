@@ -12,6 +12,7 @@ print(torch.cuda.is_available())
 
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
+
 def create_tokenized_data(file_raw, file_tok):
     # with open("data/valid.en","r",encoding="utf-8")  as f1:
     with open(file_raw,"r",encoding="utf-8")  as f_raw:
@@ -22,16 +23,7 @@ def create_tokenized_data(file_raw, file_tok):
             tokenized_sent =tokenizer.tokenize(marked_sent)
             tokenized_sents.append(tokenized_sent)
 
-            # indexed_token = tokenizer.convert_tokens_to_ids(tokenized_sent)
-            # segments_id = [1] * len(tokenized_sent)
-
-            # 每一句话作为一个元素添加进来
-            # marked_sents.append(marked_sent)
-            # tokenized_sents.append(tokenized_sent)
-            # indexed_tokens.append(indexed_token)
-            # segments_ids.append(segments_id)
-
-    with open(file_tok,"w",encoding="utf-8")  as f_tok:
+    with open(file_tok, "w", encoding="utf-8") as f_tok:
         for sent in tokenized_sents:
             sent = " ".join(sent)
             f_tok.write(sent)
