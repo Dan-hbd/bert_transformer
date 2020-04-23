@@ -63,6 +63,7 @@ class Batch(object):
             self.tensors['source'] = self.tensors['source'].transpose(0, 1).contiguous()   # 转化为 【sent_length，bat_size】   # transpose BxT to TxB
             self.tensors['src_length'] = torch.LongTensor(self.src_lengths)
             self.src_size = sum(self.src_lengths)   # 这个batch中 一共有多少个token
+
         else:
             self.src_size = 0
 

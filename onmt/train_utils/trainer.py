@@ -11,7 +11,7 @@ import os
 from onmt.ModelConstructor import init_model_parameters
 from onmt.utils import checkpoint_paths, normalize_gradients
 from apex import amp
-from bert_vecs import bert_make_vecs
+from bert_module.bert_vecs import bert_make_vecs
 
 
 class BaseTrainer(object):
@@ -203,9 +203,14 @@ class XETrainer(BaseTrainer):
 
                 # pycharm 并没有完全打印出来，中间是有个句子，没有padding,但是没有打印出来
                 src_ids = batch.get('source')  # 【sent_length, batch_size】
-                bert_tok_vecs = bert_make_vecs(src_ids) # [batch_size, sentence_length, hidden_size*4]
-                # outputs = self.model(batch, target_masking=tgt_mask)
+                bert_tok_vecs = bert_make_vecs(src_ids)  # [batch_size, sentence_length, hidden_size*4]
 
+                # batch_size = bert_tok_vecs.size(0)
+                # # [batch_size-2, sentence_length, hidden_size * 4]
+                # bert_vecs_nocls = torch.stack(([bert_tok_vecs[i][1:-1] for i in range(batch_size)]), 0)
+
+
+                # outputs = self.model(batch, target_masking=tgt_mask)
                 # 要加入bert 产生的 vecs， 而且要一个batch 一个batch 地喂给模型
                 outputs = self.model(batch, target_masking=tgt_mask, bert_vecs=bert_tok_vecs)
 
@@ -287,7 +292,10 @@ class XETrainer(BaseTrainer):
                     src_ids = batch.get('source')  # 【sent_length, batch_size】
                     bert_tok_vecs = bert_make_vecs(src_ids)  # [batch_size, sentence_length, hidden_size*4]
                     # outputs = self.model(batch, target_masking=tgt_mask)
-
+                    #
+                    # batch_size = bert_tok_vecs.size(0)
+                    # # [batch_size-2, sentence_length, hidden_size * 4]
+                    # bert_vecs_nocls = torch.stack(([bert_tok_vecs[i][1:-1] for i in range(batch_size)]), 0)
                     # 要加入bert 产生的 vecs， 而且要一个batch 一个batch 地喂给模型
                     outputs = self.model(batch, target_masking=tgt_mask, bert_vecs=bert_tok_vecs)
 

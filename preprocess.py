@@ -243,13 +243,18 @@ def make_translation_data(src_file, tgt_file, src_dicts, tgt_dicts, max_src_leng
 
             # by me
             src += [src_dicts.convertToIdx(src_words,
-                                          onmt.Constants.BERT_UNK_WORD)] 
+                                           onmt.Constants.BERT_UNK_WORD)]
 
             if add_bos:
+                # tgt += [tgt_dicts.convertToIdx(tgt_words,
+                #                                onmt.Constants.UNK_WORD,
+                #                                onmt.Constants.BOS_WORD,
+                #                                onmt.Constants.EOS_WORD, type=data_type)]
+
+                # by me 我们在tokenize的时候已经在首尾加了CLS 和 SEP
                 tgt += [tgt_dicts.convertToIdx(tgt_words,
-                                               onmt.Constants.UNK_WORD,
-                                               onmt.Constants.BOS_WORD,
-                                               onmt.Constants.EOS_WORD, type=data_type)]
+                                               onmt.Constants.BERT_UNK_WORD, type=data_type)]
+
             else:
                 tgt += [tgt_dicts.convertToIdx(tgt_words,
                                                onmt.Constants.UNK_WORD,
@@ -523,6 +528,11 @@ def main():
                                                            input_type=opt.input_type,
                                                            add_bos=(not opt.no_bos),
                                                            data_type=opt.data_type)
+        print("\n")
+        print("the fisrt src sentence of training data, pay attention to the first and last token")
+        print(train['src'][0])
+        print("the fisrt tgt sentence of training datan")
+        print(train['tgt'][0])
 
         print('Preparing validation ...')
         valid = dict()
@@ -533,13 +543,20 @@ def main():
                                                            input_type=opt.input_type,
                                                            add_bos=(not opt.no_bos),
                                                            data_type=opt.data_type)
+        print("\n")
+        print("the fisrt src sentence of valid data")
+        print(valid['src'][0])
+        print("the fisrt tgt sentence of valid data")
+        print(valid['tgt'][0])
 
     # if opt.src_vocab is None and opt.asr == False and opt.lm == False:
     #     save_vocabulary('source', dicts['src'], opt.save_data + '.src.dict')
 
-    # by me
-    if  opt.asr == False and opt.lm == False:
+    # by me 保存字典
+    if opt.asr == False and opt.lm == False:
         save_vocabulary('source', dicts['src'], opt.save_data + '.src.dict')
+        save_vocabulary('target', dicts['tgt'], opt.save_data + '.tgt.dict')
+
 
     if opt.tgt_vocab is None:
         save_vocabulary('target', dicts['tgt'], opt.save_data + '.tgt.dict')

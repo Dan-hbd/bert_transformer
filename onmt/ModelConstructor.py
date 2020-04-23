@@ -104,6 +104,8 @@ def build_tm_model(opt, dicts):
                                      opt.model_size,
                                      padding_idx=onmt.Constants.PAD)
 
+
+
     if 'atb' in dicts and dicts['atb'] is not None:
         from onmt.modules.Utilities import AttributeEmbeddings
         #

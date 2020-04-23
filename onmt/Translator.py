@@ -13,6 +13,7 @@ model_list = ['transformer', 'stochastic_transformer', 'fusion_network']
 
 class Translator(object):
     def __init__(self, opt):
+
         self.opt = opt
         self.tt = torch.cuda if opt.cuda else torch
         self.beam_accum = None
@@ -22,6 +23,7 @@ class Translator(object):
         self.fp16 = opt.fp16
         self.attributes = opt.attributes  # attributes split by |. for example: de|domain1
         self.bos_token = opt.bos_token
+
         self.sampling = opt.sampling
 
         if self.attributes:
@@ -59,6 +61,8 @@ class Translator(object):
                     self.atb_dict = None
 
                 self.bos_id = self.tgt_dict.labelToIdx[self.bos_token]
+
+
 
             # Build model from the saved option
             # if hasattr(model_opt, 'fusion') and model_opt.fusion == True:
@@ -225,8 +229,13 @@ class Translator(object):
                                                        onmt.Constants.BOS_WORD)
                             for b in src_sents]
             else:
+                # src_data = [self.src_dict.convertToIdx(b,
+                #                                        onmt.Constants.UNK_WORD)
+                #             for b in src_sents]
+
+                # by me
                 src_data = [self.src_dict.convertToIdx(b,
-                                                       onmt.Constants.UNK_WORD)
+                                                       onmt.Constants.BERT_UNK_WORD)
                             for b in src_sents]
         elif type == 'asr':
             # no need to deal with this
@@ -239,10 +248,17 @@ class Translator(object):
             tgt_bos_word = None
         tgt_data = None
         if tgt_sents:
+            # tgt_data = [self.tgt_dict.convertToIdx(b,
+            #                                        onmt.Constants.UNK_WORD,
+            #                                        tgt_bos_word,
+            #                                        onmt.Constants.EOS_WORD) for b in tgt_sents]
+
+            # by me
             tgt_data = [self.tgt_dict.convertToIdx(b,
-                                                   onmt.Constants.UNK_WORD,
+                                                   onmt.Constants.BERT_UNK_WORD,
                                                    tgt_bos_word,
-                                                   onmt.Constants.EOS_WORD) for b in tgt_sents]
+                                                   onmt.Constants.BERT_SEP_WORD) for b in tgt_sents]
+
 
         src_atbs = None
 
@@ -279,7 +295,10 @@ class Translator(object):
                             data_type=self._type, batch_size_sents=self.opt.batch_size)
 
     def build_target_tokens(self, pred, src, attn):
-        tokens = self.tgt_dict.convertToLabels(pred, onmt.Constants.EOS)
+        # tokens = self.tgt_dict.convertToLabels(pred, onmt.Constants.EOS)
+
+        # by me
+        tokens = self.tgt_dict.convertToLabels(pred, onmt.Constants.BERT_SEP)
         tokens = tokens[:-1]  # EOS
 
         return tokens

@@ -9,7 +9,7 @@ from onmt.modules.WordDrop import embedded_dropout, embedded_dropou_bert, switch
 from torch.utils.checkpoint import checkpoint
 from collections import defaultdict
 from onmt.utils import flip
-from bert_vecs import bert_make_vecs
+from bert_module.bert_vecs import bert_make_vecs
 
 torch_version = float(torch.__version__[:3])
 
@@ -666,7 +666,6 @@ class Transformer(NMTModel):
         :return:
         """
         src = batch.get('source')
-
 
         # by me
         src_ids = src  # 【sent_length, batch_size】
