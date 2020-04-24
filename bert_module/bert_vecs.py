@@ -51,8 +51,13 @@ def bert_make_vecs(batch):
         #     print(torch.nn.functional.cosine_similarity(list1,list2[0],dim=2))
 
         # token_embeddings = torch.stack(encoded_layers, dim=0)
-        # 高维是0， 最低维度是-1
-        bert_vecs = torch.cat(encoded_layers[-4:], dim=-1)   # 【batch_size, sent_len, hidden_size*4】
+
+
+        # 高维是0， 最低维度是-1, 用最后四层
+        # bert_vecs = torch.cat(encoded_layers[-4:], dim=-1)   # 【batch_size, sent_len, hidden_size*4】
+
+        # 只用最后一层，
+        bert_vecs = encoded_layers[-1]
         bert_vecs = bert_vecs.cuda()
 
     return bert_vecs

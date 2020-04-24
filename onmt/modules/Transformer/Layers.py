@@ -41,7 +41,7 @@ class PrePostProcessing(nn.Module):
         
         if 'n' in self.steps:
             
-            ln = nn.LayerNorm((self.d_model,),elementwise_affine=elementwise_affine)
+            ln = nn.LayerNorm((self.d_model,), elementwise_affine=elementwise_affine)
             self.layer_norm = Bottle(ln)
         if 'd' in self.steps:
             if variational:

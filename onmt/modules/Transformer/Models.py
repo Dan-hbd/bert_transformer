@@ -194,6 +194,7 @@ class TransformerEncoder(nn.Module):
         emb = self.time_transformer(emb)
 
         # B x T x H -> T x B x H
+        # 只是emb加上positional encoding后做了一下transpose
         context = emb.transpose(0, 1)
 
         context = self.preprocess_layer(context)
