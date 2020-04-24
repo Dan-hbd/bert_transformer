@@ -9,7 +9,6 @@ from onmt.modules.WordDrop import embedded_dropout, embedded_dropou_bert, switch
 from torch.utils.checkpoint import checkpoint
 from collections import defaultdict
 from onmt.utils import flip
-from bert_module.bert_vecs import bert_make_vecs
 
 torch_version = float(torch.__version__[:3])
 
@@ -130,14 +129,12 @@ class TransformerEncoder(nn.Module):
         self.build_modules()
 
     def build_modules(self):
-
         self.layer_modules = nn.ModuleList(
             [EncoderLayer(self.n_heads, self.model_size, self.dropout, self.inner_size,
                           self.attn_dropout, variational=self.varitional_dropout) for _ in
              range(self.layers)])
 
-    # def forward(self, input, **kwargs):
-    def forward(self, input, bert_vecs, **kwargs):
+    def forward(self, src, bert_vecs, **kwargs):
         """
         Inputs Shapes:
             input: batch_size x len_src (wanna tranpose)
@@ -152,18 +149,16 @@ class TransformerEncoder(nn.Module):
         if self.input_type == "text":
 
             # by me
-            mask_src = input.eq(onmt.Constants.PAD).unsqueeze(1)  # batch_size  x 1 x len_src for broadcasting
+            mask_src = src.eq(onmt.Constants.PAD).unsqueeze(1)  # batch_size  x 1 x len_src for broadcasting
 
             # apply switchout
             # if self.switchout > 0 and self.training:
             #     vocab_size = self.word_lut.weight.size(0)
             #     input = switchout(input, vocab_size, self.switchout)
 
-
             # by me 我改了他的 word_lut，所以这里是可以直接用的吧
             emb = self.word_lut(bert_vecs)
             # emb = embedded_dropout(self.word_lut, input, dropout=self.word_dropout if self.training else 0)
-
 
         else:
             if not self.cnn_downsampling:
@@ -225,7 +220,6 @@ class TransformerEncoder(nn.Module):
 
 class TransformerDecoder(nn.Module):
     """Decoder in 'Attention is all you need'"""
-
 
     def __init__(self, opt, embedding, positional_encoder, attribute_embeddings=None, ignore_source=False):
         """
@@ -323,6 +317,7 @@ class TransformerDecoder(nn.Module):
         return emb
 
     def forward(self, input, context, src, atbs=None, **kwargs):
+
         """
         Inputs Shapes:
             input: (Variable) batch_size x len_tgt (wanna tranpose)
@@ -509,7 +504,7 @@ class Transformer(NMTModel):
         return
 
     # def forward(self, batch, target_masking=None, zero_encoder=False):
-    def forward(self, batch, target_masking=None, zero_encoder=False, bert_vecs=None):
+    def forward(self, batch, target_masking=None, zero_encoder=False):
         """
         Inputs Shapes:
             src: len_src x batch_size
@@ -538,6 +533,8 @@ class Transformer(NMTModel):
 
         # encoder_output = self.encoder(src)
         # by me
+        bert_vecs = batch.get("bert_vec")
+        # 在encoder里我们用 src 制作 src_mask，我想保持这个不变
         encoder_output = self.encoder(src, bert_vecs)
 
         context = encoder_output['context']
@@ -546,6 +543,7 @@ class Transformer(NMTModel):
         if zero_encoder:
             context.zero_()
 
+        # 在 decoder部分，我们用到了src 做mask_src 我不想改变这部分
         decoder_output = self.decoder(tgt, context, src, atbs=tgt_atb)
         output = decoder_output['hidden']
 
@@ -584,11 +582,9 @@ class Transformer(NMTModel):
         src = batch.get('source')
 
         # by me
-        src_ids = src  # 【sent_length, batch_size】
-        bert_tok_vecs = bert_make_vecs(src_ids)  # [batch_size, sentence_length, hidden_size*4]
+        bert_tok_vecs = batch.get("bert_vec")  # [batch_size, sentence_length, hidden_size*4]
         encoder_output = self.encoder(src, bert_tok_vecs)
         context = encoder_output['context']
-
 
         tgt_input = batch.get('target_input')
         tgt_output = batch.get('target_output')
@@ -668,9 +664,7 @@ class Transformer(NMTModel):
         src = batch.get('source')
 
         # by me
-        src_ids = src  # 【sent_length, batch_size】
-        bert_tok_vecs = bert_make_vecs(src_ids)  # [batch_size, sentence_length, hidden_size*4]
-
+        bert_tok_vecs = batch.get("bert_vec")  # [batch_size, sentence_length, hidden_size*4]
 
         tgt_atb = batch.get('target_atb')
         src_transposed = src.transpose(0, 1)  # make batch_size first

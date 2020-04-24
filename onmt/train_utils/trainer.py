@@ -173,7 +173,6 @@ class XETrainer(BaseTrainer):
                         hidden states from decoder or
                         prob distribution from decoder generator
                 """
-                targets = batch.get('target_output')
                 # # have a look , the first and the last sentences in this mini batch
                 # sent1_ids = targets.t()[0].cpu().numpy().tolist()
                 # sent2_ids = targets.t()[-2].cpu().numpy().tolist()
@@ -197,22 +196,12 @@ class XETrainer(BaseTrainer):
                 # print(sent1)
                 # print(sent2)
 
+                targets = batch.get('target_output')
+                # 其实相等  torch.equal(tgt_mask, tgt_mask1): True
                 tgt_mask = targets.ne(onmt.Constants.PAD)
-                # tgt_mask1 = batch.get('tgt_mask')
-                # print(torch.equal(tgt_mask, tgt_mask1))   # 结果为True, 所以其实不用重新构造一次
 
-                # pycharm 并没有完全打印出来，中间是有个句子，没有padding,但是没有打印出来
-                src_ids = batch.get('source')  # 【sent_length, batch_size】
-                bert_tok_vecs = bert_make_vecs(src_ids)  # [batch_size, sentence_length, hidden_size*4]
-
-                # batch_size = bert_tok_vecs.size(0)
-                # # [batch_size-2, sentence_length, hidden_size * 4]
-                # bert_vecs_nocls = torch.stack(([bert_tok_vecs[i][1:-1] for i in range(batch_size)]), 0)
-
-
-                # outputs = self.model(batch, target_masking=tgt_mask)
-                # 要加入bert 产生的 vecs， 而且要一个batch 一个batch 地喂给模型
-                outputs = self.model(batch, target_masking=tgt_mask, bert_vecs=bert_tok_vecs)
+                # batch 可以batch.gert('bert_vec')
+                outputs = self.model(batch, target_masking=tgt_mask)
 
                 outputs['tgt_mask'] = tgt_mask
 
@@ -285,19 +274,10 @@ class XETrainer(BaseTrainer):
                     # can be flexibly controlled within models for easier extensibility
                     targets = batch.get('target_output')
                     tgt_mask = targets.data.ne(onmt.Constants.PAD)
-
-                    # outputs = self.model(batch, target_masking=tgt_mask, zero_encoder=opt.zero_encoder)
-
-                    # by me
-                    src_ids = batch.get('source')  # 【sent_length, batch_size】
-                    bert_tok_vecs = bert_make_vecs(src_ids)  # [batch_size, sentence_length, hidden_size*4]
                     # outputs = self.model(batch, target_masking=tgt_mask)
-                    #
-                    # batch_size = bert_tok_vecs.size(0)
-                    # # [batch_size-2, sentence_length, hidden_size * 4]
-                    # bert_vecs_nocls = torch.stack(([bert_tok_vecs[i][1:-1] for i in range(batch_size)]), 0)
-                    # 要加入bert 产生的 vecs， 而且要一个batch 一个batch 地喂给模型
-                    outputs = self.model(batch, target_masking=tgt_mask, bert_vecs=bert_tok_vecs)
+
+                    # by me 虽然这行代码没变，但是batch可以batch.gert('bert_vec')
+                    outputs = self.model(batch, target_masking=tgt_mask)
 
                     batch_size = batch.size
 

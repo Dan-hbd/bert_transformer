@@ -27,17 +27,10 @@ bert_model = bert_model.cuda()
 
 
 def bert_make_vecs(batch):
-    # batch_size = batch.size(1)  # batch_size
-    # tokens_start = torch.ones([1, batch_size], dtype=torch.int64)*onmt.Constants.BERT_CLS
-    # tokens_start =tokens_start.cuda()
-    # tokens_end = torch.ones([1, batch_size], dtype=torch.int64)*onmt.Constants.BERT_SEP
-    # tokens_end = tokens_end.cuda()
-    #
-    # tokens_tensor = torch.cat((tokens_start,batch,tokens_end ),0)
-
-    # 【sent_length, batch_size】=> [batch_size, sent_length ]
+    # make batch first: [batch_size, sent_length ]
     tokens_tensor = batch.t()
-    batch_size = tokens_tensor.size(0)
+    tokens_tensor = tokens_tensor.cuda()
+    # print("tokens_tensor", tokens_tensor[0])
     segments_tensor = tokens_tensor.ne(onmt.Constants.PAD)
 
     # 如果你打印出来你会发现其中有一行是全部为True的
@@ -60,6 +53,6 @@ def bert_make_vecs(batch):
         # token_embeddings = torch.stack(encoded_layers, dim=0)
         # 高维是0， 最低维度是-1
         bert_vecs = torch.cat(encoded_layers[-4:], dim=-1)   # 【batch_size, sent_len, hidden_size*4】
-
         bert_vecs = bert_vecs.cuda()
+
     return bert_vecs

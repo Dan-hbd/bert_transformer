@@ -6,6 +6,7 @@ from collections import defaultdict
 import onmt
 from onmt.speech.Augmenter import Augmenter
 from onmt.modules.WordDrop import switchout
+from bert_module.bert_vecs import bert_make_vecs
 
 """
 Data management for sequence-to-sequence models
@@ -60,10 +61,16 @@ class Batch(object):
 
             # # 为什么有那么多0
             # print("self.tensors['source']:",self.tensors['source'])
-            self.tensors['source'] = self.tensors['source'].transpose(0, 1).contiguous()   # 转化为 【sent_length，bat_size】   # transpose BxT to TxB
+            # 转化为 【sent_length，bat_size】
+            self.tensors['source'] = self.tensors['source'].transpose(0, 1).contiguous()
             self.tensors['src_length'] = torch.LongTensor(self.src_lengths)
             self.src_size = sum(self.src_lengths)   # 这个batch中 一共有多少个token
 
+            source_ids = self.tensors['source']
+
+            # [bat_size, sent_length, 768*4]
+            # print("get the bert_vec from bert")
+            self.tensors['bert_vec'] = bert_make_vecs(source_ids)
         else:
             self.src_size = 0
 
