@@ -23,12 +23,15 @@ parser.add_argument('-test_tgt', required=True,
 opt = parser.parse_args()
 
 
-def tokenize_data(raw_data, tokenizer):
+def tokenize_data(raw_data, tokenizer, lang):
     with open(raw_data, "r", encoding="utf-8") as f_raw:
         tokenized_sents = []
         for line in f_raw:
             sent = line.strip()
-            marked_sent = "[CLS] " + sent + " [SEP]"
+            if lang == "en":
+                marked_sent = "[CLS] " + sent + " [SEP]"
+            elif lang == "zh":
+                marked_sent = sent
             tokenized_sent = tokenizer.tokenize(marked_sent)
             tokenized_sents.append(tokenized_sent)
 
@@ -45,17 +48,13 @@ def main():
     tokenizer_zh = BertTokenizer.from_pretrained('bert-base-chinese')
 
     for data in [opt.train_src, opt.valid_src, opt.test_src]:
-        tokenize_data(data, tokenizer_en)
+        lang = "en"
+        tokenize_data(data, tokenizer_en, lang)
 
     for data in [opt.train_tgt, opt.valid_tgt, opt.test_tgt]:
-        tokenize_data(data, tokenizer_zh)
+        lang = "zh"
+        tokenize_data(data, tokenizer_zh, lang)
 
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-

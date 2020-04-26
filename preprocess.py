@@ -246,14 +246,15 @@ def make_translation_data(src_file, tgt_file, src_dicts, tgt_dicts, max_src_leng
                                            onmt.Constants.BERT_UNK_WORD)]
 
             if add_bos:
-                # tgt += [tgt_dicts.convertToIdx(tgt_words,
-                #                                onmt.Constants.UNK_WORD,
-                #                                onmt.Constants.BOS_WORD,
-                #                                onmt.Constants.EOS_WORD, type=data_type)]
+                tgt += [tgt_dicts.convertToIdx(tgt_words,
+                                               onmt.Constants.UNK_WORD,
+                                               onmt.Constants.BOS_WORD,
+                                               onmt.Constants.EOS_WORD, type=data_type)]
 
                 # by me 我们在tokenize的时候已经在首尾加了CLS 和 SEP
-                tgt += [tgt_dicts.convertToIdx(tgt_words,
-                                               onmt.Constants.BERT_UNK_WORD, type=data_type)]
+                # 更新，还是用他自己的<s> 和 </s> 避免引起混淆
+                # tgt += [tgt_dicts.convertToIdx(tgt_words,
+                #                                onmt.Constants.BERT_UNK_WORD, type=data_type)]
 
             else:
                 tgt += [tgt_dicts.convertToIdx(tgt_words,

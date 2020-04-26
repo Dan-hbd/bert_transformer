@@ -248,16 +248,17 @@ class Translator(object):
             tgt_bos_word = None
         tgt_data = None
         if tgt_sents:
-            # tgt_data = [self.tgt_dict.convertToIdx(b,
-            #                                        onmt.Constants.UNK_WORD,
-            #                                        tgt_bos_word,
-            #                                        onmt.Constants.EOS_WORD) for b in tgt_sents]
+            tgt_data = [self.tgt_dict.convertToIdx(b,
+                                                   onmt.Constants.UNK_WORD,
+                                                   tgt_bos_word,
+                                                   onmt.Constants.EOS_WORD) for b in tgt_sents]
 
             # by me
-            tgt_data = [self.tgt_dict.convertToIdx(b,
-                                                   onmt.Constants.BERT_UNK_WORD,
-                                                   tgt_bos_word,
-                                                   onmt.Constants.BERT_SEP_WORD) for b in tgt_sents]
+            # 更新，就用他以前的
+            # tgt_data = [self.tgt_dict.convertToIdx(b,
+            #                                        onmt.Constants.BERT_UNK_WORD,
+            #                                        tgt_bos_word,
+            #                                        onmt.Constants.BERT_SEP_WORD) for b in tgt_sents]
 
 
         src_atbs = None
@@ -295,10 +296,11 @@ class Translator(object):
                             data_type=self._type, batch_size_sents=self.opt.batch_size)
 
     def build_target_tokens(self, pred, src, attn):
-        # tokens = self.tgt_dict.convertToLabels(pred, onmt.Constants.EOS)
+        tokens = self.tgt_dict.convertToLabels(pred, onmt.Constants.EOS)
 
         # by me
-        tokens = self.tgt_dict.convertToLabels(pred, onmt.Constants.BERT_SEP)
+        # 更新 就用以前的
+        # tokens = self.tgt_dict.convertToLabels(pred, onmt.Constants.BERT_SEP)
         tokens = tokens[:-1]  # EOS
 
         return tokens

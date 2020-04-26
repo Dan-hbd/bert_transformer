@@ -71,6 +71,7 @@ parser.add_argument('-dump_beam', type=str, default="",
                     help='File to dump beam information to.')
 
 # 我在下方进行了修改bos_token
+# 更新：不用修改，用原来的就可以
 
 parser.add_argument('-bos_token', type=str, default="<s>",
                     help='BOS Token (used in multilingual model). Default is <s>.')
@@ -126,7 +127,9 @@ def getSentenceFromTokens(tokens, input_type):
 def main():
     opt = parser.parse_args()
     # by me
-    opt.bos_token = onmt.Constants.BERT_CLS_WORD
+    # 更新， 用它原来的默认的即可
+    # opt.bos_token = onmt.Constants.BERT_CLS_WORD
+
     opt.cuda = opt.gpu > -1
     if opt.cuda:
         torch.cuda.set_device(opt.gpu)

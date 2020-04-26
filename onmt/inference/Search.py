@@ -12,16 +12,17 @@ import onmt
 class Search(object):
 
     def __init__(self, tgt_dict):
-        # self.pad = onmt.Constants.PAD
-        # self.unk = onmt.Constants.UNK
-        # self.eos = onmt.Constants.EOS
-        # self.bos = onmt.Constants.BOS
+        self.pad = onmt.Constants.PAD
+        self.unk = onmt.Constants.UNK
+        self.eos = onmt.Constants.EOS
+        self.bos = onmt.Constants.BOS
 
         # by me
-        self.pad = onmt.Constants.BERT_PAD
-        self.unk = onmt.Constants.BERT_UNK
-        self.eos = onmt.Constants.BERT_SEP
-        self.bos = onmt.Constants.BERT_CLS
+        # 更新： 还原成以前的
+        # self.pad = onmt.Constants.BERT_PAD
+        # self.unk = onmt.Constants.BERT_UNK
+        # self.eos = onmt.Constants.BERT_SEP
+        # self.bos = onmt.Constants.BERT_CLS
 
         self.vocab_size = tgt_dict.size()
         self.scores_buf = None

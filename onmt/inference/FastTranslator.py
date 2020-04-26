@@ -20,16 +20,16 @@ class FastTranslator(Translator):
 
         super().__init__(opt)
         self.search = BeamSearch(self.tgt_dict)
-        # self.bos = self.bos_id
-        # self.eos = onmt.Constants.EOS
-        # self.pad = onmt.Constants.PAD
-
-
-        #by me 是value 不是token
         self.bos = self.bos_id
-        # self.bos = onmt.Constants.BERT_CLS
-        self.eos = onmt.Constants.BERT_SEP
-        self.pad = onmt.Constants.BERT_PAD
+        self.eos = onmt.Constants.EOS
+        self.pad = onmt.Constants.PAD
+
+
+        # by me 是value 不是token
+        # 更新，用以前的
+        # self.bos = self.bos_id
+        # self.eos = onmt.Constants.BERT_SEP
+        # self.pad = onmt.Constants.BERT_PAD
 
         self.vocab_size = self.tgt_dict.size()
         self.min_len = 1
@@ -38,10 +38,11 @@ class FastTranslator(Translator):
         self.no_repeat_ngram_size = 0
 
         if opt.verbose:
-            # print('* Current bos id: %d' % self.bos_id, onmt.Constants.BOS )
+            print('* Current bos id: %d' % self.bos_id, onmt.Constants.BOS)
 
             # by me
-            print('* Current bos id: %d' % self.bos_id, onmt.Constants.BERT_CLS)
+            # 更新： 还原成以前的
+            # print('* Current bos id: %d' % self.bos_id, onmt.Constants.BERT_CLS)
             print('* Using fast beam search implementation')
 
     def translateBatch(self, batch):
