@@ -519,7 +519,10 @@ class Transformer(NMTModel):
         if self.switchout > 0 and self.training:
             batch.switchout(self.switchout, self.src_vocab_size, self.tgt_vocab_size)
 
-        src = batch.get('source')
+        # src = batch.get('source')
+
+        # by me
+        src = batch.get('source_noCLS')
 
         #  src = batch.get('source_rev')
         tgt = batch.get('target_input')
@@ -580,7 +583,10 @@ class Transformer(NMTModel):
                  allgold_scores (list of Tensors) log probs for each word in the sentence
         """
 
-        src = batch.get('source')
+        # src = batch.get('source')
+
+        # by me
+        src = batch.get('source_noCLS')
 
         # by me
         bert_tok_vecs = batch.get("bert_vec")  # [batch_size, sentence_length, hidden_size*4]
@@ -662,9 +668,10 @@ class Transformer(NMTModel):
         :param beam_size: Size of beam used in beam search
         :return:
         """
-        src = batch.get('source')
+        # src = batch.get('source')
 
         # by me
+        src = batch.get('source_noCLS')
         bert_tok_vecs = batch.get("bert_vec")  # [batch_size, sentence_length, hidden_size*4]
 
         tgt_atb = batch.get('target_atb')

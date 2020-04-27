@@ -8,18 +8,11 @@ import argparse
 parser = argparse.ArgumentParser(description='preprocess.py')
 onmt.Markdown.add_md_help_argument(parser)
 
-parser.add_argument('-train_src', required=True,
-                    help="Path to the training source data")
-parser.add_argument('-train_tgt', required=True,
-                    help="Path to the training target data")
-parser.add_argument('-valid_src', required=True,
-                    help="Path to the validation source data")
-parser.add_argument('-valid_tgt', required=True,
-                    help="Path to the validation target data")
-parser.add_argument('-test_src', required=True,
-                    help="Path to the validation source data")
-parser.add_argument('-test_tgt', required=True,
-                    help="Path to the validation target data")
+parser.add_argument('-src_data', required=True,
+                    help="Path to the source data")
+parser.add_argument('-tgt_data', required=True,
+                    help="Path to the target data")
+
 opt = parser.parse_args()
 
 
@@ -28,6 +21,7 @@ def tokenize_data(raw_data, tokenizer, lang):
         tokenized_sents = []
         for line in f_raw:
             sent = line.strip()
+            # 我这里特意用marked_sent 是为了说明，不管是src还是tgt我没有加CLS SEP
             if lang == "en":
                 marked_sent = "[CLS] " + sent + " [SEP]"
             elif lang == "zh":
@@ -47,13 +41,12 @@ def main():
     tokenizer_en = BertTokenizer.from_pretrained('bert-base-uncased')
     tokenizer_zh = BertTokenizer.from_pretrained('bert-base-chinese')
 
-    for data in [opt.train_src, opt.valid_src, opt.test_src]:
-        lang = "en"
-        tokenize_data(data, tokenizer_en, lang)
+    src_lang = "en"
+    tgt_lang = "zh"
 
-    for data in [opt.train_tgt, opt.valid_tgt, opt.test_tgt]:
-        lang = "zh"
-        tokenize_data(data, tokenizer_zh, lang)
+    tokenize_data(opt.src_data, tokenizer_en, src_lang)
+
+    tokenize_data(opt.tgt_data, tokenizer_zh, tgt_lang)
 
 
 if __name__ == "__main__":

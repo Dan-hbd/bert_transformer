@@ -38,8 +38,8 @@ def bert_make_vecs(batch):
     #     print(segments_tensor[i]==True)
     segments_tensor = segments_tensor.long()
 
-    bert_model.eval()
     # Predict hidden states features for each layer, no backward, so no gradient
+    bert_model.eval()
 
     with torch.no_grad():
         # encoded_layers is a list, 12 layers in total, for every element of the list :
@@ -52,12 +52,18 @@ def bert_make_vecs(batch):
 
         # token_embeddings = torch.stack(encoded_layers, dim=0)
 
-
         # 高维是0， 最低维度是-1, 用最后四层
         # bert_vecs = torch.cat(encoded_layers[-4:], dim=-1)   # 【batch_size, sent_len, hidden_size*4】
 
         # 只用最后一层，
         bert_vecs = encoded_layers[-1]
-        bert_vecs = bert_vecs.cuda()
+        batch_size = bert_vecs.size(0)
+        # 【batch_size, sent_len-1, hidden_size】
+
+        bert_vecs_noClsSep = torch.stack(([bert_vecs[i][1:] for i in range(batch_size)]), dim=0)
+        # print(bert_vecs.size(),bert_vecs_noClsSep.size())
+        # bert_vecs = bert_vecs_noClsSep.cuda()
+
+        bert_vecs = bert_vecs_noClsSep.cuda()
 
     return bert_vecs

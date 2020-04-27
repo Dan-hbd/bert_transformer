@@ -64,13 +64,16 @@ class Batch(object):
             # 转化为 【sent_length，bat_size】
             self.tensors['source'] = self.tensors['source'].transpose(0, 1).contiguous()
             self.tensors['src_length'] = torch.LongTensor(self.src_lengths)
-            self.src_size = sum(self.src_lengths)   # 这个batch中 一共有多少个token
 
             source_ids = self.tensors['source']
-
             # [bat_size, sent_length, 768*4]
-            # print("get the bert_vec from bert")
             self.tensors['bert_vec'] = bert_make_vecs(source_ids)
+
+            #src_lengths 是一个list
+            batch_size = len(self.src_lengths)
+            self.src_size = sum(self.src_lengths) - batch_size   # 这个batch中 一共有多少个token
+            self.tensors['source_noCLS'] = self.tensors['source'][1:]
+
         else:
             self.src_size = 0
 
@@ -185,6 +188,10 @@ class Batch(object):
 
             # compute the lengths afte on-the-fly processing
             lengths = [x.size(0) for x in samples]
+
+            # # by me
+            # lengths = [(x.size(0))-2 for x in samples]
+
             max_length = max(lengths)
 
             # allocate data for the batch speech
