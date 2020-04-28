@@ -55,15 +55,16 @@ def bert_make_vecs(batch):
         # 高维是0， 最低维度是-1, 用最后四层
         # bert_vecs = torch.cat(encoded_layers[-4:], dim=-1)   # 【batch_size, sent_len, hidden_size*4】
 
-        # 只用最后一层，
+        # 只用最后一层，用了CLS
         bert_vecs = encoded_layers[-1]
-        batch_size = bert_vecs.size(0)
+        # bert_vecs = bert_vecs.cuda()
+
+        # batch_size = bert_vecs.size(0)
+
+        # bert_vecs_noClsSep = torch.stack(([bert_vecs[i][1:] for i in range(batch_size)]), dim=0)
+        bert_vecs = bert_vecs.cuda()
+
         # 【batch_size, sent_len-1, hidden_size】
-
-        bert_vecs_noClsSep = torch.stack(([bert_vecs[i][1:] for i in range(batch_size)]), dim=0)
         # print(bert_vecs.size(),bert_vecs_noClsSep.size())
-        # bert_vecs = bert_vecs_noClsSep.cuda()
-
-        bert_vecs = bert_vecs_noClsSep.cuda()
 
     return bert_vecs
