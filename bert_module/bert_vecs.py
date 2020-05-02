@@ -22,9 +22,9 @@ def replace_layer_norm(m, name):
 
 
 bert_model = BertModel.from_pretrained('bert-base-uncased')
-replace_layer_norm(bert_model, "Transformer")
+# on hpc58 we can use the FusedLayerNorm directly
+# replace_layer_norm(bert_model, "Transformer")
 bert_model = bert_model.cuda()
-#bert_model = amp.initialize(bert_model, opt_level="O2", keep_batchnorm_fp32=False)
 
 
 def bert_make_vecs(batch):
