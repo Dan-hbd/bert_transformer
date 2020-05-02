@@ -219,7 +219,6 @@ def main():
         raise NotImplementedError("Warning! Multi-GPU training is not fully tested and potential bugs can happen.")
     else:
         trainer = XETrainer(model, loss_function, train_data, valid_data, dicts, opt)
-        # trainer = XETrainer(model, loss_function, train_data, valid_data, dicts, opt, bert_vectors)
         if len(additional_data) > 0:
             trainer.add_additional_data(additional_data, opt.data_ratio);
 

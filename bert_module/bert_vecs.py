@@ -3,7 +3,7 @@ from pytorch_pretrained_bert import BertModel, BertTokenizer, BertForMaskedLM
 import onmt
 from torch.nn import LayerNorm
 from apex.normalization.fused_layer_norm import FusedLayerNorm
-
+#from apex import amp
 
 def replace_layer_norm(m, name):
     for attr_str in dir(m):
@@ -24,6 +24,7 @@ def replace_layer_norm(m, name):
 bert_model = BertModel.from_pretrained('bert-base-uncased')
 replace_layer_norm(bert_model, "Transformer")
 bert_model = bert_model.cuda()
+#bert_model = amp.initialize(bert_model, opt_level="O2", keep_batchnorm_fp32=False)
 
 
 def bert_make_vecs(batch):
@@ -37,6 +38,7 @@ def bert_make_vecs(batch):
     # for i in range(batch_size):
     #     print(segments_tensor[i]==True)
     segments_tensor = segments_tensor.long()
+    input_mask = tokens_tensor.ne(0).long()
 
     # Predict hidden states features for each layer, no backward, so no gradient
     bert_model.eval()
@@ -44,7 +46,7 @@ def bert_make_vecs(batch):
     with torch.no_grad():
         # encoded_layers is a list, 12 layers in total, for every element of the list :
         # 【batch_size, sent_len, hidden_size】
-        encoded_layers, _ = bert_model(tokens_tensor, segments_tensor)
+        encoded_layers, _ = bert_model(tokens_tensor, segments_tensor, input_mask)
         # combine 12 layers to make this one whole big Tensor
 
         # for layer in range(len(list1)):

@@ -11,13 +11,12 @@ import os
 from onmt.ModelConstructor import init_model_parameters
 from onmt.utils import checkpoint_paths, normalize_gradients
 from apex import amp
-from bert_module.bert_vecs import bert_make_vecs
+#from bert_module.bert_vecs import bert_make_vecs
 
 
 class BaseTrainer(object):
     
     def __init__(self, model, loss_function, train_data, valid_data, dicts, opt):
-    # def __init__(self, model, loss_function, train_data, valid_data, dicts, opt, bert_vectors):
 
         self.model = model
         self.train_data = train_data
@@ -97,12 +96,13 @@ class XETrainer(BaseTrainer):
             torch.manual_seed(self.opt.seed)
             self.loss_function = self.loss_function.cuda()
             self.model = self.model.cuda()
-
+        print("---------------", setup_optimizer, self.opt.fp16, )
         if setup_optimizer:
 
             self.optim = onmt.Optim(opt)
             self.optim.set_parameters(self.model.parameters())
 
+            # opt_level = "O0" if not self.opt.fp16 else "O0"
             opt_level = "O0" if not self.opt.fp16 else "O2"
             print("Optimization level: %s" % opt_level)
             self.model, self.optim.optimizer = amp.initialize(self.model,
@@ -110,6 +110,8 @@ class XETrainer(BaseTrainer):
                                                                    opt_level=opt_level,
                                                                    keep_batchnorm_fp32=False, loss_scale="dynamic",
                                                                    verbosity=0)
+            print("---------------", setup_optimizer, self.opt.fp16, opt_level)
+
         # An ugly hack to switch between align right and align left
         if hasattr(self.model, 'relative'):
             if self.model.relative:

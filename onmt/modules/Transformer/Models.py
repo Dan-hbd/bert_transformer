@@ -82,6 +82,7 @@ class TransformerEncoder(nn.Module):
 
         self.switchout = opt.switchout
         self.varitional_dropout = opt.variational_dropout
+        self.fp16 = opt.fp16
 
         # disable word dropout when switch out is in action
         if self.switchout > 0.0:
@@ -128,6 +129,7 @@ class TransformerEncoder(nn.Module):
 
         self.build_modules()
 
+
     def build_modules(self):
         self.layer_modules = nn.ModuleList(
             [EncoderLayer(self.n_heads, self.model_size, self.dropout, self.inner_size,
@@ -156,7 +158,10 @@ class TransformerEncoder(nn.Module):
             #     vocab_size = self.word_lut.weight.size(0)
             #     input = switchout(input, vocab_size, self.switchout)
 
-            # by me 我改了他的 word_lut，所以这里是可以直接用的吧
+            # before the .half(), bert_vecs is torch.cuda.FloatTensor, after : torch.cuda.HalfTensor
+            if self.fp16:
+                bert_vecs = bert_vecs.half()
+
             emb = self.word_lut(bert_vecs)
             # emb = embedded_dropout(self.word_lut, input, dropout=self.word_dropout if self.training else 0)
 
