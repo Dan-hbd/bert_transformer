@@ -96,7 +96,7 @@ class XETrainer(BaseTrainer):
             torch.manual_seed(self.opt.seed)
             self.loss_function = self.loss_function.cuda()
             self.model = self.model.cuda()
-        print("---------------", setup_optimizer, self.opt.fp16, )
+
         if setup_optimizer:
 
             self.optim = onmt.Optim(opt)
@@ -110,7 +110,8 @@ class XETrainer(BaseTrainer):
                                                                    opt_level=opt_level,
                                                                    keep_batchnorm_fp32=False, loss_scale="dynamic",
                                                                    verbosity=0)
-            print("---------------", setup_optimizer, self.opt.fp16, opt_level)
+            print("setup_optimizer,opt.fp16, opt_level are as following:")
+            print(setup_optimizer, self.opt.fp16, opt_level)
 
         # An ugly hack to switch between align right and align left
         if hasattr(self.model, 'relative'):

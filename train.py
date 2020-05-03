@@ -11,8 +11,7 @@ from onmt.ModelConstructor import build_model
 from options import make_parser
 from collections import defaultdict
 
-print("tell me, magic mirror， does it work now:")
-print(torch.cuda.is_available())
+print("cuda is available: ", torch.cuda.is_available())
 
 parser = argparse.ArgumentParser(description='train.py')
 onmt.Markdown.add_md_help_argument(parser)

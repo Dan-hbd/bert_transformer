@@ -32,8 +32,8 @@ def make_parser(parser):
     parser.add_argument('-rnn_size', type=int, default=512,
                         help='Size of LSTM hidden states')
     # by me
-    parser.add_argument('-concat_bert_layer', type=int, default=1,
-                        help='the num of layers which are used to generate the final hidden states')
+    # parser.add_argument('-concat_bert_layer', type=int, default=1,
+    #                     help='the num of layers which are used to generate the final hidden states')
 
     parser.add_argument('-word_vec_size', type=int, default=512,
                         help='Word embedding sizes')

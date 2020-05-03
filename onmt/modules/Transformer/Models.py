@@ -526,8 +526,6 @@ class Transformer(NMTModel):
 
         src = batch.get('source')
 
-        # by me
-        # src = batch.get('source_noCLS')
 
         #  src = batch.get('source_rev')
         tgt = batch.get('target_input')

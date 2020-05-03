@@ -90,7 +90,7 @@ def build_tm_model(opt, dicts):
         #                              padding_idx=onmt.Constants.PAD)
 
         # 原来的embedding 层改成了线性层
-        embedding_src = nn.Linear(opt.concat_bert_layer*onmt.Constants.BERT_HIDDEN,
+        embedding_src = nn.Linear(onmt.Constants.BERT_HIDDEN,
                                   opt.model_size)
 
     else:
