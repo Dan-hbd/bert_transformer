@@ -94,7 +94,11 @@ def build_tm_model(opt, dicts):
 
         #embedding_src = nn.Linear(opt.concat_bert_layer*onmt.Constants.BERT_HIDDEN,
         #                          opt.model_size)
-        embedding_src = None
+        if onmt.Constants.BERT_HIDDEN != opt.model_size:
+            embedding_src = nn.Linear(onmt.Constants.BERT_HIDDEN, opt.model_size)
+        else:
+            embedding_src = None
+
 
     else:
         embedding_src = None

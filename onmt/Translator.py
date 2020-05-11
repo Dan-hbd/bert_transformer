@@ -74,13 +74,14 @@ class Translator(object):
             model = build_model(model_opt, checkpoint['dicts'])
             
             # by me
-            scalar_mix = ScalarMix(
-                onmt.Constants.BERT_LAYERS,
-                do_layer_norm=True,
-                initial_scalar_parameters=None,
-                trainable=True,
-            )
-            model.add_module("scalar_mix", scalar_mix)
+            if self.opt.bert_scalar:
+                scalar_mix = ScalarMix(
+                    onmt.Constants.BERT_LAYERS,
+                    do_layer_norm=True,
+                    initial_scalar_parameters=None,
+                    trainable=True,
+                )
+                model.add_module("scalar_mix", scalar_mix)
 
             model.load_state_dict(checkpoint['model'])
 

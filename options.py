@@ -110,6 +110,10 @@ def make_parser(parser):
                         help='Dropout probability; applied between LSTM stacks.')
     parser.add_argument('-word_dropout', type=float, default=0.0,
                         help='Dropout probability; applied on embedding indices.')
+
+    parser.add_argument('-bert_output_dropout', type=float, default=0.0,
+                        help='Dropout probability; applied on the output of Bert.')
+
     parser.add_argument('-switchout', type=float, default=0.0,
                         help='Switchout algorithm')
     parser.add_argument('-label_smoothing', type=float, default=0.0,

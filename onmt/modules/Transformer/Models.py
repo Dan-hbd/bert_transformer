@@ -78,6 +78,8 @@ class TransformerEncoder(nn.Module):
         self.word_dropout = opt.word_dropout
         self.attn_dropout = opt.attn_dropout
         self.emb_dropout = opt.emb_dropout
+        self.bert_dropout = nn.Dropout(opt.bert_output_dropout)
+
         self.time = opt.time
         self.version = opt.version
         self.input_type = encoder_type
@@ -166,7 +168,8 @@ class TransformerEncoder(nn.Module):
                 bert_vecs = bert_vecs.half()
 
             # 去掉线性变换 
-            emb = bert_vecs
+            #emb = bert_vecs
+            emb = self.bert_dropout(bert_vecs)
             # emb = embedded_dropout(self.word_lut, input, dropout=self.word_dropout if self.training else 0)
 
         else:
@@ -537,7 +540,8 @@ class Transformer(NMTModel):
         tgt = tgt.transpose(0, 1)
 
         # by me
-        bert_all_layers = make_bert_vec(src)
+        scalar_vec = self.opt.bert_scalar
+        bert_all_layers = make_bert_vec(src,bert_scalar)
         input_mask = src.ne(0).long()
 
         # as in the typical case
@@ -603,10 +607,13 @@ class Transformer(NMTModel):
         bert_all_layers = make_bert_vec(src)
         input_mask = src.ne(0).long()
 
-        # as in the typical case
         # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
-        bert_scalar_vec = self.scalar_mix(bert_all_layers, input_mask)
-        encoder_output = self.encoder(src, bert_scalar_vec)
+        if self.opt.bert_scalar:
+            bert_vec = self.scalar_mix(bert_all_layers, input_mask)
+        else:
+            bert_vec = bert_all_layers[-1]
+
+        encoder_output = self.encoder(src, bert_vec)
 
         # by me
         # context = self.encoder(src)['context']
