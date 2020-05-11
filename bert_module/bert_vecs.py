@@ -45,10 +45,10 @@ def replace_layer_norm(m, name):
     for n, ch in m.named_children():
         replace_layer_norm(ch, n)
 
-print("build bert_encoder")
+#print("build bert_encoder")
 model_dir = "/project/student_projects2/dhe/BERT/experiments/pytorch_bert_model"
 bert_model = BertModel.from_pretrained(cache_dir=model_dir)
-#replace_layer_norm(bert_model, "Transformer")
+replace_layer_norm(bert_model, "Transformer")
 
 if torch.cuda.is_available():
     bert_model = bert_model.cuda()

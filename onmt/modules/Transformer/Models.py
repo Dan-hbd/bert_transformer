@@ -504,7 +504,6 @@ class Transformer(NMTModel):
         self.model_size = self.decoder.model_size
         self.switchout = self.decoder.switchout
         self.tgt_vocab_size = self.decoder.word_lut.weight.size(0)
-
         # I don't know how to change it here
         # if self.encoder.input_type == 'text':
         #     # by me， 完蛋了，这里没有src_vocab_size了
@@ -540,16 +539,19 @@ class Transformer(NMTModel):
         tgt = tgt.transpose(0, 1)
 
         # by me
-        scalar_vec = self.opt.bert_scalar
-        bert_all_layers = make_bert_vec(src,bert_scalar)
-        input_mask = src.ne(0).long()
+        bert_all_layers = make_bert_vec(src)
 
         # as in the typical case
         # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
-        bert_scalar_vec = self.scalar_mix(bert_all_layers, input_mask)
 
+        scalar_vec = hasattr(self,'scalar_mix')
+        if scalar_vec:
+            input_mask = src.ne(0).long()
+            bert_vec = self.scalar_mix(bert_all_layers, input_mask)
+        else:
+            bert_vec = bert_all_layers[-1]
         # 在encoder里我们用 src 制作 src_mask，src保持和以前的代码不变
-        encoder_output = self.encoder(src, bert_scalar_vec)
+        encoder_output = self.encoder(src, bert_vec)
         context = encoder_output['context']
 
         # zero out the encoder part for pre-training
@@ -608,10 +610,13 @@ class Transformer(NMTModel):
         input_mask = src.ne(0).long()
 
         # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
-        if self.opt.bert_scalar:
+        scalar_vec = hasattr(self,'scalar_mix')
+        if scalar_vec:
+            input_mask = src.ne(0).long()
             bert_vec = self.scalar_mix(bert_all_layers, input_mask)
         else:
             bert_vec = bert_all_layers[-1]
+
 
         encoder_output = self.encoder(src, bert_vec)
 

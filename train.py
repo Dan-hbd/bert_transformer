@@ -196,7 +196,7 @@ def main():
 
     if not opt.fusion:
         model = build_model(opt, dicts)
-        print("is scalared bert vector used in this model: ", opt.bert_scalar)
+        print("Is scalared bert vector used in this model: ", opt.bert_scalar)
         if opt.bert_scalar:
             scalar_mix = ScalarMix(
                onmt.Constants.BERT_LAYERS,
@@ -205,7 +205,7 @@ def main():
                trainable=True,
             )
             model.add_module("scalar_mix", scalar_mix)
-
+        
 
         """ Building the loss function """
         if opt.ctc_loss != 0:

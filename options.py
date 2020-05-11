@@ -31,9 +31,6 @@ def make_parser(parser):
     # Recurrent Model options
     parser.add_argument('-rnn_size', type=int, default=512,
                         help='Size of LSTM hidden states')
-    # by me
-    # parser.add_argument('-concat_bert_layer', type=int, default=1,
-    #                     help='the num of layers which are used to generate the final hidden states')
 
     parser.add_argument('-word_vec_size', type=int, default=512,
                         help='Word embedding sizes')
@@ -45,6 +42,15 @@ def make_parser(parser):
     parser.add_argument('-brnn_merge', default='concat',
                         help="""Merge action for the bidirectional hidden states:
                         [concat|sum]""")
+
+    # options of Bert
+    parser.add_argument('-bert_scalar', action='store_true',
+                        help='use elmo type of weighted sum of all the vectors of the 12 layers of Bert')
+    parser.add_argument('-bert_output_dropout', type=float, default=0.0,
+                        help='Dropout probability; applied on the output of Bert.')
+    parser.add_argument('-model_dir', default="/project/student_projects2/dhe/BERT/experiments/pytorch_bert_model", type=str,
+                        help=""" the path to the pretrained Bert model.""")
+
 
     # Transforer Model options
     parser.add_argument('-model_size', type=int, default=512,
@@ -110,9 +116,6 @@ def make_parser(parser):
                         help='Dropout probability; applied between LSTM stacks.')
     parser.add_argument('-word_dropout', type=float, default=0.0,
                         help='Dropout probability; applied on embedding indices.')
-
-    parser.add_argument('-bert_output_dropout', type=float, default=0.0,
-                        help='Dropout probability; applied on the output of Bert.')
 
     parser.add_argument('-switchout', type=float, default=0.0,
                         help='Switchout algorithm')
