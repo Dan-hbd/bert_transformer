@@ -90,8 +90,11 @@ def build_tm_model(opt, dicts):
         #                              padding_idx=onmt.Constants.PAD)
 
         # 原来的embedding 层改成了线性层
-        embedding_src = nn.Linear(onmt.Constants.BERT_HIDDEN,
-                                  opt.model_size)
+        # 不做变换，改transformer的size 512-768
+
+        #embedding_src = nn.Linear(opt.concat_bert_layer*onmt.Constants.BERT_HIDDEN,
+        #                          opt.model_size)
+        embedding_src = None
 
     else:
         embedding_src = None
@@ -119,8 +122,6 @@ def build_tm_model(opt, dicts):
         generators.append(onmt.modules.BaseModel.Generator(opt.model_size, dicts['tgt'].size() + 1))
 
     if opt.model == 'transformer':
-        # raise NotImplementedError
-
         onmt.Constants.init_value = opt.param_init
 
         if opt.encoder_type == "text":
@@ -205,10 +206,12 @@ def build_tm_model(opt, dicts):
             init.normal_(model.decoder.word_lut.weight, mean=0, std=opt.model_size ** -0.5)
     else:
         if opt.init_embedding == 'xavier':
-            init.xavier_uniform_(model.encoder.word_lut.weight)
+            if model.encoder.word_lut:
+                init.xavier_uniform_(model.encoder.word_lut.weight)
             init.xavier_uniform_(model.decoder.word_lut.weight)
         elif opt.init_embedding == 'normal':
-            init.normal_(model.encoder.word_lut.weight, mean=0, std=opt.model_size ** -0.5)
+            if model.encoder.word_lut:
+                init.normal_(model.encoder.word_lut.weight, mean=0, std=opt.model_size ** -0.5)
             init.normal_(model.decoder.word_lut.weight, mean=0, std=opt.model_size ** -0.5)
 
     return model

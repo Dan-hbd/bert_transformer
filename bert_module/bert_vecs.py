@@ -1,12 +1,33 @@
 import torch
 import torch.nn as nn
-from pytorch_pretrained_bert import BertModel, BertTokenizer, BertForMaskedLM
+from pytorch_pretrained_bert import  BertTokenizer 
 from torch.nn import LayerNorm
 from apex.normalization.fused_layer_norm import FusedLayerNorm
-# from typing import Any
+import argparse
+
 import onmt
+from .modeling import BertModel  
 #from apex import amp
 from .scalar_mix import ScalarMix
+
+
+#def add_args(parser):
+#    parser.add_argument('--bert-model-name', default='bert-base-uncased', type=str)
+#    parser.add_argument('--warmup-from-nmt', action='store_true', )
+#    parser.add_argument('--warmup-nmt-file', default='checkpoint_nmt.pt', )
+#    parser.add_argument('--encoder-bert-dropout', action='store_true',)
+#    parser.add_argument('--encoder-bert-dropout-ratio', default=0.25, type=float)
+#    return parser
+#
+#parser = argparse.ArgumentParser(description='bert.py')
+#parser = add_args(parser)
+#args = parser.parse_args()
+#
+#DEFAULT_MAX_SOURCE_POSITIONS = 1024
+#DEFAULT_MAX_TARGET_POSITIONS = 1024
+#
+#args.max_source_positions = DEFAULT_MAX_SOURCE_POSITIONS
+#args.max_target_positions = DEFAULT_MAX_TARGET_POSITIONS
 
 
 def replace_layer_norm(m, name):
@@ -24,62 +45,26 @@ def replace_layer_norm(m, name):
     for n, ch in m.named_children():
         replace_layer_norm(ch, n)
 
-class BertVec(nn.Module):
-    def __init__(self,do_layer_norm=True, scalar_mix_parameters=None):
-        super(BertVec,self).__init__()
+print("build bert_encoder")
+model_dir = "/project/student_projects2/dhe/BERT/experiments/pytorch_bert_model"
+bert_model = BertModel.from_pretrained(cache_dir=model_dir)
+#replace_layer_norm(bert_model, "Transformer")
 
-        self.bert_model = BertModel.from_pretrained('bert-base-uncased')
-        replace_layer_norm(self.bert_model, "Transformer")
-        self.bert_model = self.bert_model.cuda()
-        self.num_layers = onmt.Constants.BERT_LAYERS
-        # self._scalar_mixes: Any = []
-        self.scalar_mix = ScalarMix(
-            self.num_layers,
-            do_layer_norm=do_layer_norm,
-            initial_scalar_parameters=scalar_mix_parameters,
-            trainable=scalar_mix_parameters is None,
-        )
-        # self._scalar_mixes.append(scalar_mix)
+if torch.cuda.is_available():
+    bert_model = bert_model.cuda()
 
 
-    def forward(self, batch):
-        # make batch first: [batch_size, sent_length ]
-        tokens_tensor = batch.t()
-        tokens_tensor = tokens_tensor.cuda()
-        # print("tokens_tensor", tokens_tensor[0])
-        segments_tensor = tokens_tensor.ne(onmt.Constants.PAD)
-        segments_tensor = segments_tensor.long()
-        input_mask = tokens_tensor.ne(0).long()
-
-        representations = []
-
-        # Predict hidden states features for each layer, no backward, so no gradient
-        self.bert_model.eval()
-
-        with torch.no_grad():
-            # encoded_layers is a list, 12 layers in total, for every element of the list :
-            # 【batch_size, sent_len, hidden_size】
-            encoded_layers, _ = self.bert_model(tokens_tensor, segments_tensor, input_mask)
-            # combine 12 layers to make this one whole big Tensor
-
-            # for layer in range(len(list1)):
-            #     print(torch.nn.functional.cosine_similarity(list1,list2[0],dim=2))
-
-            # token_embeddings = torch.stack(encoded_layers, dim=0)
-            # 高维是0， 最低维度是-1, 用最后四层
-            # bert_vecs = torch.cat(encoded_layers[-4:], dim=-1)   # 【batch_size, sent_len, hidden_size*4】
-
-            # as in the typical case
-            # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
-
-            bert_vecs = self.scalar_mix(encoded_layers, input_mask)
-            # 只用最后一层，用了CLS
-            # bert_vecs = encoded_layers[-1]
+def make_bert_vec(batch):
+    # already batch first: [batch_size, sent_length ]
+    tokens_tensor = batch
+    segments_tensor = tokens_tensor.ne(onmt.Constants.PAD).long()
+    input_mask = tokens_tensor.ne(0).long()
 
 
-            bert_vecs = bert_vecs.cuda()
+    bert_model.eval()
+    with torch.no_grad():
+    # encoded_layers is a list, 12 layers in total, for every element of the list :
+    # 【batch_size, sent_len, hidden_size】
+        encoded_layers, _ = bert_model(tokens_tensor, segments_tensor, input_mask)
 
-            # 【batch_size, sent_len-1, hidden_size】
-            # print(bert_vecs.size(),bert_vecs_noClsSep.size())
-
-        return bert_vecs
+    return encoded_layers

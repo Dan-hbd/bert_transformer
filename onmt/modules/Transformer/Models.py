@@ -10,6 +10,9 @@ from torch.utils.checkpoint import checkpoint
 from collections import defaultdict
 from onmt.utils import flip
 
+from bert_module.bert_vecs import make_bert_vec
+
+
 torch_version = float(torch.__version__[:3])
 
 
@@ -162,7 +165,8 @@ class TransformerEncoder(nn.Module):
             if self.fp16:
                 bert_vecs = bert_vecs.half()
 
-            emb = self.word_lut(bert_vecs)
+            # 去掉线性变换 
+            emb = bert_vecs
             # emb = embedded_dropout(self.word_lut, input, dropout=self.word_dropout if self.training else 0)
 
         else:
@@ -525,25 +529,23 @@ class Transformer(NMTModel):
             batch.switchout(self.switchout, self.src_vocab_size, self.tgt_vocab_size)
 
         src = batch.get('source')
-
-
-        #  src = batch.get('source_rev')
         tgt = batch.get('target_input')
         tgt_atb = batch.get('target_atb')  # a dictionary of attributes
 
-        # src = flip(src, 0)
-        # inv_idx = torch.arange(src.size(0) - 1, -1, -1, device=src.device, dtype=src.dtype).long()
-        # src = src.index_select(0, inv_idx)
 
-        src = src.transpose(0, 1)  # transpose to have batch first
+        src = src.transpose(0, 1)  # transpose to have batch first [batch_size, sentence_length]
         tgt = tgt.transpose(0, 1)
 
-        # encoder_output = self.encoder(src)
         # by me
-        bert_vecs = batch.get("bert_vec")
-        # 在encoder里我们用 src 制作 src_mask，我想保持这个不变
-        encoder_output = self.encoder(src, bert_vecs)
+        bert_all_layers = make_bert_vec(src)
+        input_mask = src.ne(0).long()
 
+        # as in the typical case
+        # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
+        bert_scalar_vec = self.scalar_mix(bert_all_layers, input_mask)
+
+        # 在encoder里我们用 src 制作 src_mask，src保持和以前的代码不变
+        encoder_output = self.encoder(src, bert_scalar_vec)
         context = encoder_output['context']
 
         # zero out the encoder part for pre-training
@@ -587,27 +589,29 @@ class Transformer(NMTModel):
         """
 
         src = batch.get('source')
-
-        # by me
-        # src = batch.get('source_noCLS')
-
-        # by me
-        bert_tok_vecs = batch.get("bert_vec")  # [batch_size, sentence_length, hidden_size*4]
-        encoder_output = self.encoder(src, bert_tok_vecs)
-        context = encoder_output['context']
-
         tgt_input = batch.get('target_input')
         tgt_output = batch.get('target_output')
         tgt_atb = batch.get('target_atb')  # a dictionary of attributes
 
-        # transpose to have batch first
+        # transpose to make batch_size first (batch_size, seq_len)
         src = src.transpose(0, 1)
         tgt_input = tgt_input.transpose(0, 1)
         batch_size = tgt_input.size(0)
 
 
         # by me
+        bert_all_layers = make_bert_vec(src)
+        input_mask = src.ne(0).long()
+
+        # as in the typical case
+        # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
+        bert_scalar_vec = self.scalar_mix(bert_all_layers, input_mask)
+        encoder_output = self.encoder(src, bert_scalar_vec)
+
+        # by me
         # context = self.encoder(src)['context']
+        context = encoder_output['context']
+
 
         if hasattr(self, 'autoencoder') and self.autoencoder \
                 and self.autoencoder.representation == "EncoderHiddenState":
@@ -672,18 +676,20 @@ class Transformer(NMTModel):
         :return:
         """
         src = batch.get('source')
+        tgt_atb = batch.get('target_atb')
+        src_transposed = src.transpose(0, 1)  # make batch_size first (batch_size, seq_len)
 
         # by me
-        # src = batch.get('source_noCLS')
-        bert_tok_vecs = batch.get("bert_vec")  # [batch_size, sentence_length, hidden_size*4]
+        bert_all_layers = make_bert_vec(src_transposed)
+        input_mask = src_transposed.ne(0).long()
 
-        tgt_atb = batch.get('target_atb')
-        src_transposed = src.transpose(0, 1)  # make batch_size first
-        # encoder_output = self.encoder(src_transposed)
+        # as in the typical case
+        # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
+        bert_scalar_vec = self.scalar_mix(bert_all_layers, input_mask)
 
         # by me
         # src_transposed 和 bert_tok_vecs 都是batch first
-        encoder_output = self.encoder(src_transposed, bert_tok_vecs)
+        encoder_output = self.encoder(src_transposed, bert_scalar_vec)
 
         decoder_state = TransformerDecodingState(src, tgt_atb, encoder_output['context'], encoder_output['src_mask'],
                                                  beam_size=beam_size, model_size=self.model_size, type=type)

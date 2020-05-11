@@ -38,10 +38,8 @@ class ScalarMix(torch.nn.Module):
                 for i in range(mixture_size)
             ]
         )
-        if torch.cuda.is_available():
-            self.gamma = Parameter(torch.FloatTensor([1.0]), requires_grad=trainable ).to('cuda')
-        else:
-            self.gamma = Parameter(torch.FloatTensor([1.0]), requires_grad=trainable)
+
+        self.gamma = Parameter(torch.FloatTensor([1.0]), requires_grad=trainable)
 
     def forward(self, tensors: List[torch.Tensor], mask: torch.BoolTensor = None) -> torch.Tensor:
         """
@@ -61,7 +59,7 @@ class ScalarMix(torch.nn.Module):
             variance = (
                 torch.sum(((tensor_masked - mean) * broadcast_mask) ** 2) / num_elements_not_masked
             )
-            return (tensor - mean) / torch.sqrt(variance + tiny_value_of_dtype.tiny_value_of_dtype(variance.dtype))
+            return (tensor - mean) / torch.sqrt(variance + tiny_value_of_dtype(variance.dtype))
 
         normed_weights = torch.nn.functional.softmax(
             torch.cat([parameter for parameter in self.scalar_parameters]), dim=0
@@ -69,6 +67,7 @@ class ScalarMix(torch.nn.Module):
 
         if torch.cuda.is_available():
             normed_weights = normed_weights.cuda()
+            self.gamma = self.gamma.to('cuda')
 
         normed_weights = torch.split(normed_weights, split_size_or_sections=1)
 
@@ -77,10 +76,8 @@ class ScalarMix(torch.nn.Module):
             for weight, tensor in zip(normed_weights, tensors):
                 pieces.append(weight * tensor)
 
-            # print("------------gamma:---------------", self.gamma)
-            # print("-----------normed_weights:---------")
-            # print(normed_weights)
             return self.gamma * sum(pieces)
+
         else:
             broadcast_mask = mask.unsqueeze(-1)
             input_dim = tensors[0].size(-1)
@@ -93,6 +90,11 @@ class ScalarMix(torch.nn.Module):
                     weight * _do_layer_norm(tensor, broadcast_mask, num_elements_not_masked)
                 )
 
-            # print("------------gamma:---------------",self.gamma)
-            # print("-----------normed_weights:---------", normed_weights)
+            # print("gamma:",self.gamma)
+            # print("gamma:",self.gamma.grad)
+            # print("gamma:",self.gamma.requires_grad)
+            # print("normed_weights:", (normed_weights[0]))
+            # print("normed_weights:", (normed_weights[0]).requires_grad)
+            # print("normed_weights:", (normed_weights[0]).grad)
+
             return self.gamma * sum(pieces)

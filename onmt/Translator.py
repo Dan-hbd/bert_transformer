@@ -7,6 +7,7 @@ from onmt.ModelConstructor import build_model, build_language_model
 from ae.Autoencoder import Autoencoder
 import torch.nn.functional as F
 import sys
+from bert_module.scalar_mix import ScalarMix
 
 model_list = ['transformer', 'stochastic_transformer', 'fusion_network']
 
@@ -71,6 +72,16 @@ class Translator(object):
             # else:
             #     model = build_model(model_opt, checkpoint['dicts'])
             model = build_model(model_opt, checkpoint['dicts'])
+            
+            # by me
+            scalar_mix = ScalarMix(
+                onmt.Constants.BERT_LAYERS,
+                do_layer_norm=True,
+                initial_scalar_parameters=None,
+                trainable=True,
+            )
+            model.add_module("scalar_mix", scalar_mix)
+
             model.load_state_dict(checkpoint['model'])
 
             if model_opt.model in model_list:

@@ -11,7 +11,6 @@ import os
 from onmt.ModelConstructor import init_model_parameters
 from onmt.utils import checkpoint_paths, normalize_gradients
 from apex import amp
-#from bert_module.bert_vecs import bert_make_vecs
 
 
 class BaseTrainer(object):
@@ -103,12 +102,12 @@ class XETrainer(BaseTrainer):
             self.optim.set_parameters(self.model.parameters())
 
             # opt_level = "O0" if not self.opt.fp16 else "O0"
-            opt_level = "O0" if not self.opt.fp16 else "O2"
+            opt_level = "O0" if not self.opt.fp16 else "O1"
             print("Optimization level: %s" % opt_level)
             self.model, self.optim.optimizer = amp.initialize(self.model,
                                                                    self.optim.optimizer,
                                                                    opt_level=opt_level,
-                                                                   keep_batchnorm_fp32=False, loss_scale="dynamic",
+                                                                   keep_batchnorm_fp32=None, loss_scale="dynamic",
                                                                    verbosity=0)
             print("setup_optimizer,opt.fp16, opt_level are as following:")
             print(setup_optimizer, self.opt.fp16, opt_level)
@@ -203,7 +202,10 @@ class XETrainer(BaseTrainer):
                 # 其实相等  torch.equal(tgt_mask, tgt_mask1): True
                 tgt_mask = targets.ne(onmt.Constants.PAD)
 
-                # batch 可以batch.gert('bert_vec')
+                # # batch 可以batch.gert('bert_vec')
+                # source_ids = batch.get('source')
+                # batch['bert_vec'], scalar_parameters = make_bert_vec(source_ids, scalar_mix)
+
                 outputs = self.model(batch, target_masking=tgt_mask)
 
                 outputs['tgt_mask'] = tgt_mask
@@ -277,9 +279,7 @@ class XETrainer(BaseTrainer):
                     # can be flexibly controlled within models for easier extensibility
                     targets = batch.get('target_output')
                     tgt_mask = targets.data.ne(onmt.Constants.PAD)
-                    # outputs = self.model(batch, target_masking=tgt_mask)
 
-                    # by me 虽然这行代码没变，但是batch可以batch.gert('bert_vec')
                     outputs = self.model(batch, target_masking=tgt_mask)
 
                     batch_size = batch.size
@@ -324,7 +324,7 @@ class XETrainer(BaseTrainer):
                     # simulating the multi-gpu situation
                     # if counter == opt.virtual_gpu:
                     # if counter >= opt.batch_size_update:
-                
+
                     if num_accumulated_words >= opt.batch_size_update * 0.95:
                         grad_denom = 1 / denom
                         if self.opt.normalize_gradient:

@@ -10,6 +10,7 @@ import os, sys
 from onmt.ModelConstructor import build_model, build_language_model
 from copy import deepcopy
 from onmt.utils import checkpoint_paths, normalize_gradients
+from bert_module.scalar_mix import ScalarMix
 
 
 parser = argparse.ArgumentParser(description='translate.py')
@@ -33,8 +34,18 @@ def custom_build_model(opt, dict, lm=False):
 
     if not lm:
         model = build_model(opt, dict)
+        # by me
+        scalar_mix = ScalarMix(
+           onmt.Constants.BERT_LAYERS,
+           do_layer_norm=True,
+           initial_scalar_parameters=None,
+           trainable=True,
+        )
+        model.add_module("scalar_mix", scalar_mix)
     else:
         model = build_language_model(opt, dict)
+
+
 
     return model
 
@@ -89,6 +100,7 @@ def main():
 
     model_opt = checkpoint['opt']
     dicts = checkpoint['dicts']
+
 
     print(model_opt.layers)
 

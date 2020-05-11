@@ -10,6 +10,8 @@ from onmt.modules.Loss import NMTLossFunc, NMTAndCTCLossFunc
 from onmt.ModelConstructor import build_model
 from options import make_parser
 from collections import defaultdict
+from bert_module.scalar_mix import ScalarMix
+
 
 print("cuda is available: ", torch.cuda.is_available())
 
@@ -195,6 +197,15 @@ def main():
     if not opt.fusion:
         model = build_model(opt, dicts)
 
+        scalar_mix = ScalarMix(
+           onmt.Constants.BERT_LAYERS,
+           do_layer_norm=True,
+           initial_scalar_parameters=None,
+           trainable=True,
+        )
+        model.add_module("scalar_mix", scalar_mix)
+
+
         """ Building the loss function """
         if opt.ctc_loss != 0:
             loss_function = NMTAndCTCLossFunc(dicts['tgt'].size(),
@@ -213,6 +224,9 @@ def main():
 
     n_params = sum([p.nelement() for p in model.parameters()])
     print('* number of parameters: %d' % n_params)
+
+    # print(model)
+
 
     if len(opt.gpus) > 1 or opt.virtual_gpu > 1:
         raise NotImplementedError("Warning! Multi-GPU training is not fully tested and potential bugs can happen.")

@@ -1,3 +1,4 @@
+# from https://github.com/allenai/allennlp/blob/c09833c3a2b2fe66f10ffd18761f90d0912c5ea2/allennlp/nn/util.py
 import torch
 
 def tiny_value_of_dtype(dtype: torch.dtype):

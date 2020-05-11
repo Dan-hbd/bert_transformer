@@ -6,7 +6,7 @@ from collections import defaultdict
 import onmt
 from onmt.speech.Augmenter import Augmenter
 from onmt.modules.WordDrop import switchout
-from bert_module.bert_vecs import BertVec
+# from bert_module.bert_vecs import make_bert_vec
 
 """
 Data management for sequence-to-sequence models
@@ -50,9 +50,6 @@ class Batch(object):
             self.src_align_right = True
 
         self.tgt_align_right = tgt_align_right
-        # by me
-        self.get_bert_vec = BertVec(do_layer_norm=True)
-
         if src_data is not None:
             # self.tensors['source']: [bat_size, sent_length]  src_lengths: 这个batch中每句话的长度
             self.tensors['source'], self.src_lengths = self.collate(src_data,
@@ -67,10 +64,9 @@ class Batch(object):
             self.tensors['source'] = self.tensors['source'].transpose(0, 1).contiguous()
             self.tensors['src_length'] = torch.LongTensor(self.src_lengths)
 
-            source_ids = self.tensors['source']
+            # source_ids = self.tensors['source']
             # [bat_size, sent_length, 768*4]
-            # self.tensors['bert_vec'] = bert_make_vecs(source_ids)
-            self.tensors['bert_vec'] = self.get_bert_vec(source_ids)
+            # self.tensors['bert_vec'] = make_bert_vec(source_ids)
 
             #src_lengths 是一个list
             batch_size = len(self.src_lengths)
