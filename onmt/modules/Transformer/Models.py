@@ -60,7 +60,7 @@ class TransformerEncoder(nn.Module):
 
     # by me:
     # 这里不用改， 因为 这里传进来的embedding是已经初始化好的embedding, 所以我们改初始化embedding的那个地方就可以了
-    def __init__(self, opt, embedding, positional_encoder, encoder_type='text'):
+    def __init__(self, opt, vec_linear, positional_encoder, encoder_type='text'):
 
         super(TransformerEncoder, self).__init__()
 
@@ -115,8 +115,8 @@ class TransformerEncoder(nn.Module):
                 # assert self.model_size == feat_size, \
                 #     "The model dimension doesn't match with the feature dim, expecting %d " % feat_size
         else:
-
-            self.word_lut = embedding  # 【4*768， model_size】
+            self.word_lut = None  # 【4*768， model_size】
+            self.vec_linear = vec_linear # 【bert_hidden_size， transformer_model_size】
 
         if opt.time == 'positional_encoding':
             self.time_transformer = positional_encoder
@@ -158,43 +158,18 @@ class TransformerEncoder(nn.Module):
             # by me
             mask_src = src.eq(onmt.Constants.PAD).unsqueeze(1)  # batch_size  x 1 x len_src for broadcasting
 
-            # apply switchout
-            # if self.switchout > 0 and self.training:
-            #     vocab_size = self.word_lut.weight.size(0)
-            #     input = switchout(input, vocab_size, self.switchout)
-
             # before the .half(), bert_vecs is torch.cuda.FloatTensor, after : torch.cuda.HalfTensor
             if self.fp16:
                 bert_vecs = bert_vecs.half()
 
-            # 去掉线性变换 
-            #emb = bert_vecs
+            # 对bert 的词向量做dropout
             emb = self.bert_dropout(bert_vecs)
-            # emb = embedded_dropout(self.word_lut, input, dropout=self.word_dropout if self.training else 0)
+            # 如果bert和transformer的hidden_size 不一致，做线性转换
+            if self.vec_linear:
+                emb = self.vec_linear(emb)
 
         else:
-            if not self.cnn_downsampling:
-                mask_src = input.narrow(2, 0, 1).squeeze(2).eq(onmt.Constants.PAD).unsqueeze(1)
-                input = input.narrow(2, 1, input.size(2) - 1)
-                emb = self.audio_trans(input.contiguous().view(-1, input.size(2))).view(input.size(0),
-                                                                                        input.size(1), -1)
-            else:
-                long_mask = input.narrow(2, 0, 1).squeeze(2).eq(onmt.Constants.PAD)
-                input = input.narrow(2, 1, input.size(2) - 1)
-
-                # first resizing to fit the CNN format
-                input = input.view(input.size(0), input.size(1), -1, self.channels)
-                input = input.permute(0, 3, 1, 2)
-
-                input = self.audio_trans(input)
-                input = input.permute(0, 2, 1, 3).contiguous()
-                input = input.view(input.size(0), input.size(1), -1)
-                # print(input.size())
-                input = self.linear_trans(input)
-
-                mask_src = long_mask[:, 0:input.size(1) * 4:4].unsqueeze(1)
-                # the size seems to be B x T ?
-                emb = input
+            raise NotImplementedError
 
         if torch_version >= 1.2:
             mask_src = mask_src.bool()
@@ -308,12 +283,6 @@ class TransformerDecoder(nn.Module):
 
     def process_embedding(self, input, atbs=None):
 
-        # if self.switchout == 0:
-        #     input_ = input
-        # if self.switchout > 0 and self.training:
-        #     vocab_size = self.word_lut.weight.size(0)
-        #     input_ = switchout(input, vocab_size, self.switchout)
-        # else:
         input_ = input
 
         emb = embedded_dropout(self.word_lut, input_, dropout=self.word_dropout if self.training else 0)
@@ -504,6 +473,9 @@ class Transformer(NMTModel):
         self.model_size = self.decoder.model_size
         self.switchout = self.decoder.switchout
         self.tgt_vocab_size = self.decoder.word_lut.weight.size(0)
+
+
+
         # I don't know how to change it here
         # if self.encoder.input_type == 'text':
         #     # by me， 完蛋了，这里没有src_vocab_size了
