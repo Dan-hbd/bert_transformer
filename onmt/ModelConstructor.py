@@ -5,6 +5,7 @@ from onmt.modules.Transformer.Models import TransformerEncoder, TransformerDecod
 from onmt.modules.Transformer.Layers import PositionalEncoding
 from onmt.modules.RelativeTransformer.Layers import SinusoidalPositionalEmbedding
 
+
 init = torch.nn.init
 
 MAX_LEN = onmt.Constants.max_position_length  # This should be the longest sentence from the dataset
@@ -130,55 +131,25 @@ def build_tm_model(opt, dicts):
 
         if opt.encoder_type == "text":
             encoder = TransformerEncoder(opt, embedding_src, positional_encoder, opt.encoder_type)
-        elif opt.encoder_type == "audio":
-            encoder = TransformerEncoder(opt, None, positional_encoder, opt.encoder_type)
-        elif opt.encoder_type == "mix":
-            text_encoder = TransformerEncoder(opt, embedding_src, positional_encoder, "text")
-            audio_encoder = TransformerEncoder(opt, None, positional_encoder, "audio")
-            encoder = MixedEncoder(text_encoder, audio_encoder)
+            if opt.finetune_bert:
+                from bert_module.modeling import BertModel
+                from bert_module.bert_vecs import replace_layer_norm
+                bert_model = BertModel.from_pretrained(cache_dir=opt.model_dir)
+                replace_layer_norm(bert_model, "Transformer")
+            else:
+                bert_model = None
         else:
             print ("Unknown encoder type:", opt.encoder_type)
             exit(-1)
 
         decoder = TransformerDecoder(opt, embedding_tgt, positional_encoder, attribute_embeddings=attribute_embeddings)
+        # if opt.finetune_bert:
+        #     model = Transformer(bert_model,encoder, decoder, nn.ModuleList(generators))
+        # else:
+        #     model = Transformer(encoder, decoder, nn.ModuleList(generators))
+        model = Transformer(bert_model, encoder, decoder, nn.ModuleList(generators))
 
-        model = Transformer(encoder, decoder, nn.ModuleList(generators))
 
-    elif opt.model == 'stochastic_transformer':
-        
-        from onmt.modules.StochasticTransformer.Models import StochasticTransformerEncoder, StochasticTransformerDecoder
-
-        onmt.Constants.weight_norm = opt.weight_norm
-        onmt.Constants.init_value = opt.param_init
-        
-        if opt.encoder_type == "text":
-            encoder = StochasticTransformerEncoder(opt, embedding_src, positional_encoder, opt.encoder_type)
-        elif opt.encoder_type == "audio":
-            encoder = StochasticTransformerEncoder(opt, 0, positional_encoder, opt.encoder_type)
-        elif opt.encoder_type == "mix":
-            text_encoder = StochasticTransformerEncoder(opt, embedding_src, positional_encoder, "text")
-            audio_encoder = StochasticTransformerEncoder(opt, None, positional_encoder, "audio")
-            encoder = MixedEncoder(text_encoder, audio_encoder)
-        else:
-            print ("Unknown encoder type:", opt.encoder_type)
-            exit(-1)
-
-        decoder = StochasticTransformerDecoder(opt, embedding_tgt, positional_encoder, attribute_embeddings=attribute_embeddings)
-
-        model = Transformer(encoder, decoder, nn.ModuleList(generators))
-
-    elif opt.model == 'dlcltransformer' :
-
-        from onmt.modules.DynamicTransformer.Models import DlclTransformerDecoder, DlclTransformerEncoder
-
-        if opt.encoder_type == "text":
-            encoder = DlclTransformerEncoder(opt, embedding_src, positional_encoder, opt.encoder_type)
-        elif opt.encoder_type == "audio":
-            encoder = DlclTransformerEncoder(opt, None, positional_encoder, opt.encoder_type)
-
-        decoder = DlclTransformerDecoder(opt, embedding_tgt, positional_encoder)
-
-        model = Transformer(encoder, decoder, nn.ModuleList(generators))
     elif opt.model == 'relative_transformer':
         from onmt.modules.RelativeTransformer.Models import RelativeTransformer
         positional_encoder = SinusoidalPositionalEmbedding(opt.model_size)

@@ -499,8 +499,8 @@ class TransformerDecoder(nn.Module):
 class Transformer(NMTModel):
     """Main model in 'Attention is all you need' """
 
-    def __init__(self, encoder, decoder, generator=None):
-        super().__init__(encoder, decoder, generator)
+    def __init__(self, bert_model, encoder, decoder, generator=None):
+        super().__init__(bert_model, encoder, decoder, generator)
         self.model_size = self.decoder.model_size
         self.switchout = self.decoder.switchout
         self.tgt_vocab_size = self.decoder.word_lut.weight.size(0)
@@ -515,7 +515,6 @@ class Transformer(NMTModel):
     def reset_states(self):
         return
 
-    # def forward(self, batch, target_masking=None, zero_encoder=False):
     def forward(self, batch, target_masking=None, zero_encoder=False):
         """
         Inputs Shapes:
@@ -537,16 +536,22 @@ class Transformer(NMTModel):
 
         src = src.transpose(0, 1)  # transpose to have batch first [batch_size, sentence_length]
         tgt = tgt.transpose(0, 1)
+        input_mask = src.ne(0).long()
 
-        # by me
-        bert_all_layers = make_bert_vec(src)
+        # finetune bert时，整个模型是bert+Transformer
+        finetune_bert = self.bert_model
+        if finetune_bert:
+            segments_tensor = src.ne(onmt.Constants.PAD).long()
+            bert_all_layers, _ = self.bert_model(src, segments_tensor, input_mask)
+
+        else:
+            bert_all_layers = make_bert_vec(src)
 
         # as in the typical case
         # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
 
         scalar_vec = hasattr(self,'scalar_mix')
-        if scalar_vec:
-            input_mask = src.ne(0).long()
+        if scalar_vec and not finetune_bert:
             bert_vec = self.scalar_mix(bert_all_layers, input_mask)
         else:
             bert_vec = bert_all_layers[-1]
@@ -603,16 +608,20 @@ class Transformer(NMTModel):
         src = src.transpose(0, 1)
         tgt_input = tgt_input.transpose(0, 1)
         batch_size = tgt_input.size(0)
-
+        input_mask = src.ne(0).long()
 
         # by me
-        bert_all_layers = make_bert_vec(src)
-        input_mask = src.ne(0).long()
+        finetune_bert = self.bert_model
+        if finetune_bert:
+            segments_tensor = src.ne(onmt.Constants.PAD).long()
+            bert_all_layers, _ = self.bert_model(src, segments_tensor, input_mask)
+        else:
+            bert_all_layers = make_bert_vec(src)
+
 
         # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
         scalar_vec = hasattr(self,'scalar_mix')
-        if scalar_vec:
-            input_mask = src.ne(0).long()
+        if scalar_vec and not finetune_bert:
             bert_vec = self.scalar_mix(bert_all_layers, input_mask)
         else:
             bert_vec = bert_all_layers[-1]
@@ -621,7 +630,6 @@ class Transformer(NMTModel):
         encoder_output = self.encoder(src, bert_vec)
 
         # by me
-        # context = self.encoder(src)['context']
         context = encoder_output['context']
 
 
@@ -692,16 +700,21 @@ class Transformer(NMTModel):
         src_transposed = src.transpose(0, 1)  # make batch_size first (batch_size, seq_len)
 
         # by me
+        # 需要确认是不是training的时候不会走到这里来，所以不用判断是否在finetune模式
+        1/0
+        # training 在正常执行，所以是不会来到这的
         bert_all_layers = make_bert_vec(src_transposed)
         input_mask = src_transposed.ne(0).long()
 
-        # as in the typical case
-        # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
-        bert_scalar_vec = self.scalar_mix(bert_all_layers, input_mask)
+        scalar_vec = hasattr(self,'scalar_mix')
+        if scalar_vec :
+            bert_vec = self.scalar_mix(bert_all_layers, input_mask)
+        else:
+            bert_vec = bert_all_layers[-1]
 
         # by me
         # src_transposed 和 bert_tok_vecs 都是batch first
-        encoder_output = self.encoder(src_transposed, bert_scalar_vec)
+        encoder_output = self.encoder(src_transposed, bert_vec)
 
         decoder_state = TransformerDecodingState(src, tgt_atb, encoder_output['context'], encoder_output['src_mask'],
                                                  beam_size=beam_size, model_size=self.model_size, type=type)

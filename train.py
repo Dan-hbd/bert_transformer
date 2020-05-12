@@ -197,7 +197,10 @@ def main():
     if not opt.fusion:
         model = build_model(opt, dicts)
         print("Is scalared bert vector used in this model: ", opt.bert_scalar)
-        if opt.bert_scalar:
+        print("Is it Bert+Transformer finetuning : ", opt.finetune_bert)
+        if opt.bert_scalar and opt.finetune_bert:
+            print("WARNING: we only fine tune bert, we don't finetune scalar parameters, please set opt.bert_scalar False")
+        if opt.bert_scalar and not opt.finetune_bert:
             scalar_mix = ScalarMix(
                onmt.Constants.BERT_LAYERS,
                do_layer_norm=True,

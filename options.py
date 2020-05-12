@@ -44,6 +44,8 @@ def make_parser(parser):
                         [concat|sum]""")
 
     # options of Bert
+    parser.add_argument('-finetune_bert', action='store_true',
+                        help='we train bert and transformer together to finetune bert')
     parser.add_argument('-bert_scalar', action='store_true',
                         help='use elmo type of weighted sum of all the vectors of the 12 layers of Bert')
     parser.add_argument('-bert_output_dropout', type=float, default=0.0,

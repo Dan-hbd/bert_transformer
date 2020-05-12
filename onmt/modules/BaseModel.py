@@ -34,8 +34,9 @@ class Generator(nn.Module):
 
 class NMTModel(nn.Module):
 
-    def __init__(self, encoder, decoder, generator=None):
+    def __init__(self, bert_model, encoder, decoder, generator=None):
         super(NMTModel, self).__init__()
+        self.bert_model = bert_model
         self.encoder = encoder
         self.decoder = decoder
         self.generator = generator
