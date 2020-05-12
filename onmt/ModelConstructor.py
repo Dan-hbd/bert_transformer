@@ -85,21 +85,11 @@ def build_tm_model(opt, dicts):
         #                              opt.model_size,
         #                              padding_idx=onmt.Constants.PAD)
 
-        # by me
-        # embedding_src = nn.Embedding(opt.concat_bert_layer*onmt.Constants.BERT_HIDDEN,
-        #                              opt.model_size,
-        #                              padding_idx=onmt.Constants.PAD)
-
-        # 原来的embedding 层改成了线性层
-        # 不做变换，改transformer的size 512-768
-
-        #embedding_src = nn.Linear(opt.concat_bert_layer*onmt.Constants.BERT_HIDDEN,
-        #                          opt.model_size)
+        # by me 我们用bert的词向量作为embedding, 如果bert的词向量维度和transformer的词向量维度不一致，我们做线性转换
         if onmt.Constants.BERT_HIDDEN != opt.model_size:
-            embedding_src = nn.Linear(onmt.Constants.BERT_HIDDEN, opt.model_size)
+            bert_linear = nn.Linear(onmt.Constants.BERT_HIDDEN, opt.model_size)
         else:
-            embedding_src = None
-
+            bert_linear = None
 
     else:
         embedding_src = None
@@ -112,17 +102,6 @@ def build_tm_model(opt, dicts):
                                      opt.model_size,
                                      padding_idx=onmt.Constants.PAD)
 
-
-
-    if 'atb' in dicts and dicts['atb'] is not None:
-        from onmt.modules.Utilities import AttributeEmbeddings
-        #
-        attribute_embeddings = AttributeEmbeddings(dicts['atb'], opt.model_size)
-        # attribute_embeddings = nn.Embedding(dicts['atb'].size(), opt.model_size)
-
-    else:
-        attribute_embeddings = None
-
     if opt.ctc_loss != 0:
         generators.append(onmt.modules.BaseModel.Generator(opt.model_size, dicts['tgt'].size() + 1))
 
@@ -130,7 +109,7 @@ def build_tm_model(opt, dicts):
         onmt.Constants.init_value = opt.param_init
 
         if opt.encoder_type == "text":
-            encoder = TransformerEncoder(opt, embedding_src, positional_encoder, opt.encoder_type)
+            encoder = TransformerEncoder(opt, bert_linear, positional_encoder, opt.encoder_type)
             if opt.finetune_bert:
                 from bert_module.modeling import BertModel
                 from bert_module.bert_vecs import replace_layer_norm
@@ -142,11 +121,8 @@ def build_tm_model(opt, dicts):
             print ("Unknown encoder type:", opt.encoder_type)
             exit(-1)
 
-        decoder = TransformerDecoder(opt, embedding_tgt, positional_encoder, attribute_embeddings=attribute_embeddings)
-        # if opt.finetune_bert:
-        #     model = Transformer(bert_model,encoder, decoder, nn.ModuleList(generators))
-        # else:
-        #     model = Transformer(encoder, decoder, nn.ModuleList(generators))
+        decoder = TransformerDecoder(opt, embedding_tgt, positional_encoder, attribute_embeddings=None)
+
         model = Transformer(bert_model, encoder, decoder, nn.ModuleList(generators))
 
 
@@ -161,7 +137,6 @@ def build_tm_model(opt, dicts):
             # encoder = TransformerEncoder(opt, None, positional_encoder, opt.encoder_type)
         generator = nn.ModuleList(generators)
         model = RelativeTransformer(opt, [embedding_src, embedding_tgt], positional_encoder, generator=generator)
-        # model = Transformer(encoder, decoder, )
 
     else:
         raise NotImplementedError
