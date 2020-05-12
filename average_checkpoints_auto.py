@@ -66,16 +66,13 @@ def main():
     models = existed_save_files
     # # opt.model should be a string of models, split by |
     # models = list()
-    #
 
     # take the top
     models = models[:opt.top]
 
     # print(models)
-    #
     n_models = len(models)
-    #
-    print("Loading main model from %s ..." % models[0])
+    print("Firstly load the best model from %s ..." % models[0])
     checkpoint = torch.load(models[0], map_location=lambda storage, loc: storage)
 
     if 'optim' in checkpoint:
@@ -83,15 +80,6 @@ def main():
 
     main_checkpoint = checkpoint
 
-    # best_checkpoint = {
-    #     'model': deepcopy(main_checkpoint['model']),
-    #     'dicts': main_checkpoint['dicts'],
-    #     'opt': main_checkpoint['opt'],
-    #     'epoch': -1,
-    #     'iteration': -1,
-    #     'batchOrder': None,
-    #     'optim': None
-    # }
     best_checkpoint = main_checkpoint
 
     # print("Saving best model to %s" % opt.output + ".top")
@@ -102,7 +90,7 @@ def main():
     dicts = checkpoint['dicts']
 
 
-    print(model_opt.layers)
+    #print("model_opt.layers:", model_opt.layers)
 
     main_model = custom_build_model(model_opt, checkpoint['dicts'], lm=opt.lm)
 
@@ -110,7 +98,7 @@ def main():
 
     if opt.cuda:
         main_model = main_model.cuda()
-
+    print("Then load the other %d models ..." % (n_models-1))
     for i in range(1, len(models)):
 
         model = models[i]

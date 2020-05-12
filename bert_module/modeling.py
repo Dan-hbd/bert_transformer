@@ -34,11 +34,8 @@ import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss
 
-from .file_utils import WEIGHTS_NAME, CONFIG_NAME
-print("CONFIG_NAME:", CONFIG_NAME)
+#from .file_utils import WEIGHTS_NAME, CONFIG_NAME
 logger = logging.getLogger(__name__)
-
-# by me
 logging.basicConfig(level=logging.DEBUG,
 format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
 datefmt='%a, %d %b %Y %H:%M:%S',
@@ -46,7 +43,7 @@ filename='bert-pretraining-hd.log',
 filemode='w')
 
 
-
+WEIGHTS_NAME="pytorch_model.bin"
 BERT_CONFIG_NAME = 'bert_config.json'
 TF_WEIGHTS_NAME = 'model.ckpt'
 
