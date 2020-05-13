@@ -21,11 +21,11 @@ def replace_layer_norm(m, name):
         replace_layer_norm(ch, n)
 
 pretrained_Bert_dir = "/project/student_projects2/dhe/BERT/experiments/pytorch_bert_model"
-bert_encoder = BertModel.from_pretrained(cache_dir=pretrained_Bert_dir)
-replace_layer_norm(bert_encoder, "Transformer")
+#bert_encoder = BertModel.from_pretrained(cache_dir=pretrained_Bert_dir)
+#replace_layer_norm(bert_encoder, "Transformer")
 
-if torch.cuda.is_available():
-    bert_model = bert_encoder.cuda()
+#if torch.cuda.is_available():
+#    bert_model = bert_encoder.cuda()
 
 
 def make_bert_vec(batch):

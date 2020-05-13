@@ -4,7 +4,8 @@ import onmt
 from onmt.modules.Transformer.Models import TransformerEncoder, TransformerDecoder, Transformer, MixedEncoder
 from onmt.modules.Transformer.Layers import PositionalEncoding
 from onmt.modules.RelativeTransformer.Layers import SinusoidalPositionalEmbedding
-
+from bert_module.modeling import BertModel
+from bert_module.bert_vecs import replace_layer_norm
 
 init = torch.nn.init
 
@@ -110,13 +111,9 @@ def build_tm_model(opt, dicts):
 
         if opt.encoder_type == "text":
             encoder = TransformerEncoder(opt, bert_linear, positional_encoder, opt.encoder_type)
-            if opt.finetune_bert:
-                from bert_module.modeling import BertModel
-                from bert_module.bert_vecs import replace_layer_norm
-                bert_model = BertModel.from_pretrained(cache_dir=opt.model_dir)
-                replace_layer_norm(bert_model, "Transformer")
-            else:
-                bert_model = None
+            # 这里 bert_model_dir 可以是pytorch提供的预训练模型，也可以是经过自己fine_tune的bert
+            bert_model = BertModel.from_pretrained(cache_dir=opt.bert_model_dir)
+            replace_layer_norm(bert_model, "Transformer")
         else:
             print ("Unknown encoder type:", opt.encoder_type)
             exit(-1)

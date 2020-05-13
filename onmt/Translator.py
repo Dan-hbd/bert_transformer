@@ -74,7 +74,7 @@ class Translator(object):
             model = build_model(model_opt, checkpoint['dicts'])
             
             # by me
-            if self.opt.bert_scalar:
+            if model_opt.bert_scalar:
                 scalar_mix = ScalarMix(
                     onmt.Constants.BERT_LAYERS,
                     do_layer_norm=True,

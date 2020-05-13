@@ -10,7 +10,7 @@ from torch.utils.checkpoint import checkpoint
 from collections import defaultdict
 from onmt.utils import flip
 
-from bert_module.bert_vecs import make_bert_vec
+#from bert_module.bert_vecs import make_bert_vec
 
 
 torch_version = float(torch.__version__[:3])
@@ -510,20 +510,14 @@ class Transformer(NMTModel):
         tgt = tgt.transpose(0, 1)
         input_mask = src.ne(0).long()
 
-        # finetune bert时，整个模型是bert+Transformer
-        finetune_bert = self.bert_model
-        if finetune_bert:
-            segments_tensor = src.ne(onmt.Constants.PAD).long()
-            bert_all_layers, _ = self.bert_model(src, segments_tensor, input_mask)
-
-        else:
-            bert_all_layers = make_bert_vec(src)
+        # 整个模型始终是bert+Transformer
+        segments_tensor = src.ne(onmt.Constants.PAD).long()
+        bert_all_layers, _ = self.bert_model(src, segments_tensor, input_mask)
 
         # as in the typical case
         # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
-
         scalar_vec = hasattr(self,'scalar_mix')
-        if scalar_vec and not finetune_bert:
+        if scalar_vec:
             bert_vec = self.scalar_mix(bert_all_layers, input_mask)
         else:
             bert_vec = bert_all_layers[-1]
@@ -583,17 +577,14 @@ class Transformer(NMTModel):
         input_mask = src.ne(0).long()
 
         # by me
-        finetune_bert = self.bert_model
-        if finetune_bert:
-            segments_tensor = src.ne(onmt.Constants.PAD).long()
-            bert_all_layers, _ = self.bert_model(src, segments_tensor, input_mask)
-        else:
-            bert_all_layers = make_bert_vec(src)
+        segments_tensor = src.ne(onmt.Constants.PAD).long()
+        bert_all_layers, _ = self.bert_model(src, segments_tensor, input_mask)
+
 
 
         # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
         scalar_vec = hasattr(self,'scalar_mix')
-        if scalar_vec and not finetune_bert:
+        if scalar_vec:
             bert_vec = self.scalar_mix(bert_all_layers, input_mask)
         else:
             bert_vec = bert_all_layers[-1]
@@ -670,13 +661,14 @@ class Transformer(NMTModel):
         src = batch.get('source')
         tgt_atb = batch.get('target_atb')
         src_transposed = src.transpose(0, 1)  # make batch_size first (batch_size, seq_len)
+        segments_tensor = src_transposed.ne(onmt.Constants.PAD).long()
+        input_mask = src_transposed.ne(0).long()
 
         # by me
-        # 需要确认是不是training的时候不会走到这里来，所以不用判断是否在finetune模式
-        1/0
+        # training时不会到这里来，translate 时会
         # training 在正常执行，所以是不会来到这的
-        bert_all_layers = make_bert_vec(src_transposed)
-        input_mask = src_transposed.ne(0).long()
+        #bert_all_layers = make_bert_vec(src_transposed)
+        bert_all_layers, _ = self.bert_model(src_transposed, segments_tensor, input_mask)
 
         scalar_vec = hasattr(self,'scalar_mix')
         if scalar_vec :

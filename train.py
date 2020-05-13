@@ -195,12 +195,19 @@ def main():
     print('Building model...')
 
     if not opt.fusion:
-        model = build_model(opt, dicts)
-        print("Is scalared bert vector used in this model: ", opt.bert_scalar)
-        print("Is it Bert+Transformer finetuning : ", opt.finetune_bert)
         if opt.bert_scalar and opt.finetune_bert:
             print("WARNING: we only fine tune bert, we don't finetune scalar parameters, please set opt.bert_scalar False")
-        if opt.bert_scalar and not opt.finetune_bert:
+
+        print("Is scalared bert vector used in this model: ", opt.bert_scalar)
+        print("Is it Bert+Transformer finetuning : ", opt.finetune_bert)
+
+        model = build_model(opt, dicts)
+
+        if not opt.finetune_bert:
+            for param in model.bert_model.parameters():
+                param.requires_grad = False
+
+        if not opt.finetune_bert and opt.bert_scalar:
             scalar_mix = ScalarMix(
                onmt.Constants.BERT_LAYERS,
                do_layer_norm=True,
@@ -209,6 +216,14 @@ def main():
             )
             model.add_module("scalar_mix", scalar_mix)
         
+#        for name, param in model.named_parameters():
+#            print(name)
+#            if param.requires_grad:
+#                print(name)
+#        print("whats the problem")
+#        for name, param in model.generator.named_parameters():
+#            print(name, param)
+
 
         """ Building the loss function """
         if opt.ctc_loss != 0:
@@ -227,17 +242,23 @@ def main():
         loss_function = FusionLoss(dicts['tgt'].size(), label_smoothing=opt.label_smoothing)
 
     n_params = sum([p.nelement() for p in model.parameters()])
-    print('* number of parameters: %d' % n_params)
+    print('* number of all parameters: %d' % n_params)
 
+    n_params_grad = sum([p.nelement() for p in model.parameters() if p.requires_grad == True])
+    print('* number of all parameters that need gradient: %d' % n_params_grad)
+
+    n_params_nograd = sum([p.nelement() for p in model.parameters() if p.requires_grad == False])
+    print('* number of all parameters that do not need gradient: %d' % n_params_nograd)
+
+    assert n_params == (n_params_grad + n_params_nograd)
     # print(model)
-
 
     if len(opt.gpus) > 1 or opt.virtual_gpu > 1:
         raise NotImplementedError("Warning! Multi-GPU training is not fully tested and potential bugs can happen.")
     else:
-        trainer = XETrainer(model, loss_function, train_data, valid_data, dicts, opt)
+        trainer = XETrainer(model, loss_function, train_data, valid_data, dicts, opt,setup_optimizer=True)
         if len(additional_data) > 0:
-            trainer.add_additional_data(additional_data, opt.data_ratio);
+            trainer.add_additional_data(additional_data, opt.data_ratio)
 
     trainer.run(checkpoint=checkpoint)
 
