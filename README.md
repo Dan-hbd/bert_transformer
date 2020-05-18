@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Transformer networks for Neural Machine Translation
 
 This is an implementation of the transformer for the paper
@@ -21,3 +22,7 @@ Recipe for the Speech model coming soon.
 
 ----------------------------
 
+=======
+# bert_transformer
+leverage the pretrained model Bert to do nmt
+>>>>>>> 01028340096eee43c63902fdd726e5dc9225184f
