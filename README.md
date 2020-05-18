@@ -1,3 +1,6 @@
+# this is based on the code from https://github.com/quanpn90/NMTGMinor.git and the code from https://github.com/huggingface/transformers
+
+
 <<<<<<< HEAD
 # Transformer networks for Neural Machine Translation
 
