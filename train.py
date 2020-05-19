@@ -198,8 +198,8 @@ def main():
         if opt.bert_scalar and opt.finetune_bert:
             print("WARNING: we only fine tune bert, we don't finetune scalar parameters, please set opt.bert_scalar False")
 
-        print("Is scalared bert vector used in this model: ", opt.bert_scalar)
-        print("Is it Bert+Transformer finetuning : ", opt.finetune_bert)
+        print("Using scalared bert vector: ", opt.bert_scalar)
+        print("Using Bert+Transformer to finetuning : ", opt.finetune_bert)
 
         model = build_model(opt, dicts)
 
@@ -215,15 +215,12 @@ def main():
                trainable=True,
             )
             model.add_module("scalar_mix", scalar_mix)
-        
-#        for name, param in model.named_parameters():
-#            print(name)
-#            if param.requires_grad:
-#                print(name)
-#        print("whats the problem")
-#        for name, param in model.generator.named_parameters():
-#            print(name, param)
 
+        for name, param in model.bert_model.named_parameters():
+            # print(name, param, param.requires_grad)
+            # the params in bert_model which require gradient:
+            if param.requires_grad:
+                print(name)
 
         """ Building the loss function """
         if opt.ctc_loss != 0:

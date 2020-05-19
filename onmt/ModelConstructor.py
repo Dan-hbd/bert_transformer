@@ -114,6 +114,7 @@ def build_tm_model(opt, dicts):
             # 这里 bert_model_dir 可以是pytorch提供的预训练模型，也可以是经过自己fine_tune的bert
             bert_model = BertModel.from_pretrained(cache_dir=opt.bert_model_dir)
             replace_layer_norm(bert_model, "Transformer")
+
         else:
             print ("Unknown encoder type:", opt.encoder_type)
             exit(-1)
