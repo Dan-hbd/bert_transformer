@@ -44,6 +44,7 @@ filemode='w')
 
 
 WEIGHTS_NAME="pytorch_model.bin"
+WEIGHTS_NAME="pretrained_model_ppl_11.pt"
 BERT_CONFIG_NAME = 'bert_config.json'
 TF_WEIGHTS_NAME = 'model.ckpt'
 
@@ -618,15 +619,21 @@ class BertPreTrainedModel(nn.Module):
                 if child is not None:
                     load(child, prefix + name + '.')
         start_prefix = ''
-        # print("hasattr(model, 'bert')",hasattr(model, 'bert')  ) :false
-        if not hasattr(model, 'bert') and any(s.startswith('bert.') for s in state_dict.keys()):
-            start_prefix = 'bert.'
+
+        # by me
+        # if not hasattr(model, 'bert') and any(s.startswith('bert.') for s in state_dict.keys()):
+        # hasattr(model, 'bert_model') 第一个元素 model是我们这次新建的 model
+        if not hasattr(model, 'bert_model') and any(s.startswith('bert_model.') for s in state_dict.keys()):
+            start_prefix = 'bert_model.'
+
+        # by me
         load(model, prefix=start_prefix)
+
         if len(missing_keys) > 0:
-            logger.info("Weights of {} not initialized from pretrained model: {}".format(
+            print("Weights of {} not initialized from pretrained model: {}".format(
                 model.__class__.__name__, missing_keys))
         if len(unexpected_keys) > 0:
-            logger.info("Weights from pretrained model not used in {}: {}".format(
+            print("Weights from pretrained model not used in {}: {}".format(
                 model.__class__.__name__, unexpected_keys))
         if len(error_msgs) > 0:
             raise RuntimeError('Error(s) in loading state_dict for {}:\n\t{}'.format(
