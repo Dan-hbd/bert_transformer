@@ -33,6 +33,7 @@ parser.add_argument('-method', default='mean',
 def custom_build_model(opt, dict, lm=False):
 
     if not lm:
+        # print("bert_model_dir:", opt.bert_model_dir)
         model = build_model(opt, dict)
         # by me
         scalar_mix = ScalarMix(

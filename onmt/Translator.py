@@ -36,7 +36,7 @@ class Translator(object):
         # models are string with | as delimiter
         models = opt.model.split("|")
 
-        print(models)
+        # print(models)
         self.n_models = len(models)
         self._type = 'text'
 

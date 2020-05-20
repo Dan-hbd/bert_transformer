@@ -219,6 +219,8 @@ class FastTranslator(Translator):
 
             decode_input = tokens[:, :step + 1]
             lprobs, avg_attn_scores = self._decode(decode_input, decoder_states)
+            # print("lprobs:", lprobs)
+            # print("avg_attn_scores:", avg_attn_scores)
             avg_attn_scores = None
 
             lprobs[:, self.pad] = -math.inf  # never select pad
@@ -448,6 +450,7 @@ class FastTranslator(Translator):
 
         for i in range(self.n_models):
             decoder_output = self.models[i].step(tokens, decoder_states[i])
+            # print("the decoder_output:", decoder_output)
 
             # take the last decoder state
             # decoder_hidden = decoder_hidden.squeeze(1)

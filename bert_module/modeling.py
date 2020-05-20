@@ -43,7 +43,7 @@ filename='bert-pretraining-hd.log',
 filemode='w')
 
 
-# WEIGHTS_NAME="pytorch_model.bin"
+WEIGHTS_NAME="pytorch_model.bin"
 # WEIGHTS_NAME="pretrained_model_ppl_11.pt"
 BERT_CONFIG_NAME = 'bert_config.json'
 TF_WEIGHTS_NAME = 'model.ckpt'
@@ -570,7 +570,6 @@ class BertPreTrainedModel(nn.Module):
         state_dict = kwargs.get('state_dict', None)
         kwargs.pop('state_dict', None)
         save_dir = kwargs.get('cache_dir', None)
-        bert_weight_name = kwargs.get('pretrained_model', None)
         kwargs.pop('cache_dir', None)
         from_tf = kwargs.get('from_tf', False) # 不从本地加载tensorflow state dictionnary
         kwargs.pop('from_tf', None)
@@ -585,7 +584,7 @@ class BertPreTrainedModel(nn.Module):
         # 从 pytorch_model.bin 加载参数
         if state_dict is None and not from_tf:
             #weights_path = os.path.join(serialization_dir, WEIGHTS_NAME)
-            weights_path = os.path.join(serialization_dir, bert_weight_name)
+            weights_path = os.path.join(serialization_dir, WEIGHTS_NAME)
             state_dict = torch.load(weights_path, map_location='cpu')
 
         old_keys = []
@@ -623,10 +622,9 @@ class BertPreTrainedModel(nn.Module):
         start_prefix = ''
 
         # by me
-        # if not hasattr(model, 'bert') and any(s.startswith('bert.') for s in state_dict.keys()):
+        if not hasattr(model, 'bert') and any(s.startswith('bert.') for s in state_dict.keys()):
+            start_prefix = 'bert.'
         # hasattr(model, 'bert_model') 第一个元素 model是我们这次新建的 model
-        if not hasattr(model, 'bert_model') and any(s.startswith('bert_model.') for s in state_dict.keys()):
-            start_prefix = 'bert_model.'
 
         # by me
         load(model, prefix=start_prefix)

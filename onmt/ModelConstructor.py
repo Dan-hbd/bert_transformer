@@ -112,8 +112,12 @@ def build_tm_model(opt, dicts):
         if opt.encoder_type == "text":
             encoder = TransformerEncoder(opt, bert_linear, positional_encoder, opt.encoder_type)
             # 这里 bert_model_dir 可以是pytorch提供的预训练模型，也可以是经过自己fine_tune的bert
-            bert_model = BertModel.from_pretrained(cache_dir=opt.bert_model_dir, pretrained_model =opt.pretrained_model_name)
-            replace_layer_norm(bert_model, "Transformer")
+            if opt.bert_state_dict:
+                finetuned_state_dict = torch.load(opt.bert_state_dict)
+                bert = BertModel.from_pretrained(cache_dir=opt.bert_config_dir, state_dict=finetuned_state_dict)
+            else:
+                bert = BertModel.from_pretrained(cache_dir=opt.bert_config_dir)
+            replace_layer_norm(bert, "Transformer")
 
         else:
             print ("Unknown encoder type:", opt.encoder_type)
@@ -121,7 +125,7 @@ def build_tm_model(opt, dicts):
 
         decoder = TransformerDecoder(opt, embedding_tgt, positional_encoder, attribute_embeddings=None)
 
-        model = Transformer(bert_model, encoder, decoder, nn.ModuleList(generators))
+        model = Transformer(bert, encoder, decoder, nn.ModuleList(generators))
 
 
     elif opt.model == 'relative_transformer':

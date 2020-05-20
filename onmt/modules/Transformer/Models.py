@@ -160,11 +160,13 @@ class TransformerEncoder(nn.Module):
 
             # before the .half(), bert_vecs is torch.cuda.FloatTensor, after : torch.cuda.HalfTensor
             if self.fp16:
+                #print("yes fp16")
                 bert_vecs = bert_vecs.half()
 
             # 对bert 的词向量做dropout
             emb = self.bert_dropout(bert_vecs)
             # 如果bert和transformer的hidden_size 不一致，做线性转换
+            #print(self.vec_linear)
             if self.vec_linear:
                 emb = self.vec_linear(emb)
 
@@ -179,7 +181,6 @@ class TransformerEncoder(nn.Module):
 
         """ Adding positional encoding """
         emb = self.time_transformer(emb)
-
         # B x T x H -> T x B x H
         # 只是emb加上positional encoding后做了一下transpose
         context = emb.transpose(0, 1)
@@ -276,7 +277,7 @@ class TransformerDecoder(nn.Module):
 
     def renew_buffer(self, new_len):
 
-        print(new_len)
+        #print(new_len)
         self.positional_encoder.renew(new_len)
         mask = torch.ByteTensor(np.triu(np.ones((new_len+1, new_len+1)), k=1).astype('uint8'))
         self.register_buffer('mask', mask)
@@ -468,8 +469,8 @@ class TransformerDecoder(nn.Module):
 class Transformer(NMTModel):
     """Main model in 'Attention is all you need' """
 
-    def __init__(self, bert_model, encoder, decoder, generator=None):
-        super().__init__(bert_model, encoder, decoder, generator)
+    def __init__(self, bert, encoder, decoder, generator=None):
+        super().__init__(bert, encoder, decoder, generator)
         self.model_size = self.decoder.model_size
         self.switchout = self.decoder.switchout
         self.tgt_vocab_size = self.decoder.word_lut.weight.size(0)
@@ -512,7 +513,7 @@ class Transformer(NMTModel):
 
         # 整个模型始终是bert+Transformer
         segments_tensor = src.ne(onmt.Constants.PAD).long()
-        bert_all_layers, _ = self.bert_model(src, segments_tensor, input_mask)
+        bert_all_layers, _ = self.bert(src, segments_tensor, input_mask)
 
         # as in the typical case
         # tensors: (batch_size, seq_len, dim)    mask : (batch_size, seq_len)
@@ -578,7 +579,7 @@ class Transformer(NMTModel):
 
         # by me
         segments_tensor = src.ne(onmt.Constants.PAD).long()
-        bert_all_layers, _ = self.bert_model(src, segments_tensor, input_mask)
+        bert_all_layers, _ = self.bert(src, segments_tensor, input_mask)
 
 
 
@@ -668,7 +669,7 @@ class Transformer(NMTModel):
         # training时不会到这里来，translate 时会
         # training 在正常执行，所以是不会来到这的
         #bert_all_layers = make_bert_vec(src_transposed)
-        bert_all_layers, _ = self.bert_model(src_transposed, segments_tensor, input_mask)
+        bert_all_layers, _ = self.bert(src_transposed, segments_tensor, input_mask)
 
         scalar_vec = hasattr(self,'scalar_mix')
         if scalar_vec :
@@ -702,7 +703,6 @@ class TransformerDecodingState(DecoderState):
             if src is not None:
                 if src.dim() == 3:
                     self.src = src.narrow(2, 0, 1).squeeze(2).repeat(1, beam_size)
-                    print(self.src.size())
                     # self.src = src.repeat(1, beam_size, 1) # T x Bb x c
                 else:
                     self.src = src.repeat(1, beam_size)

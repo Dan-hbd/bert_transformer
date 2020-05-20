@@ -204,7 +204,7 @@ def main():
         model = build_model(opt, dicts)
 
         if not opt.finetune_bert:
-            for param in model.bert_model.parameters():
+            for param in model.bert.parameters():
                 param.requires_grad = False
 
         if not opt.finetune_bert and opt.bert_scalar:
@@ -216,11 +216,11 @@ def main():
             )
             model.add_module("scalar_mix", scalar_mix)
 
-        for name, param in model.bert_model.named_parameters():
+      #  for name, param in model.bert_model.named_parameters():
             # print(name, param, param.requires_grad)
             # the params in bert_model which require gradient:
-            if param.requires_grad:
-                print(name)
+            # if param.requires_grad:
+            #    print(name)
 
         """ Building the loss function """
         if opt.ctc_loss != 0:

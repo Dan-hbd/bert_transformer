@@ -347,6 +347,7 @@ class PositionalEncoding(nn.Module):
 
     def forward(self, word_emb, t=None):
 
+        # print("the first time to print:", word_emb)
         len_seq = t if t else word_emb.size(1)
 
         self.data_type = word_emb.type()
@@ -355,9 +356,10 @@ class PositionalEncoding(nn.Module):
             self.renew(len_seq)
 
         if word_emb.size(1) == len_seq:
+            #print("the second time1:", word_emb)
             out = word_emb + self.pos_emb[:len_seq, :].type_as(word_emb)
         else:
-            # out = word_emb + Variable(self.pos_emb[:len_seq, :][-1, :], requires_grad=False)
+            #print("the second time2:", word_emb)
             time_emb = self.pos_emb[len_seq-1, :] # 1 x dim
             # out should have size bs x 1 x dim
             out = word_emb + time_emb.unsqueeze(0).repeat(word_emb.size(0), 1, 1).type_as(word_emb)
