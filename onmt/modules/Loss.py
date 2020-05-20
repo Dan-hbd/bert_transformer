@@ -17,6 +17,8 @@ class CrossEntropyLossBase(_Loss):
     subclass of this one.
     Args:
         output_size: number of words in vocabulary()
+    
+    利用了 label-smoothing regularization, or LSR. 技术
     """
     
     def __init__(self, output_size, label_smoothing):
@@ -34,6 +36,10 @@ class CrossEntropyLossBase(_Loss):
 
         lprobs = scores
         non_pad_mask = gtruth.ne(self.padding_idx)
+        # non_pad_mask 应该全是True, 因为有tgt_mask的情况我们的gtruth 已经是clean过了的
+        # test_tensor = torch.empty(non_pad_mask.size(0), dtype=bool)
+        # test_tensor[:] = True
+        # print((test_tensor == non_pad_mask).all())
         nll_loss = -lprobs.gather(1, gtruth.unsqueeze(1))[non_pad_mask]
         smooth_loss = -lprobs.sum(dim=-1, keepdim=True)[non_pad_mask]
         nll_loss = nll_loss.sum()
