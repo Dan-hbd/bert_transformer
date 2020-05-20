@@ -50,8 +50,11 @@ def make_parser(parser):
                         help='use elmo type of weighted sum of all the vectors of the 12 layers of Bert')
     parser.add_argument('-bert_output_dropout', type=float, default=0.0,
                         help='Dropout probability; applied on the output of Bert.')
-    parser.add_argument('-bert_model_dir', default="/project/student_projects2/dhe/BERT/experiments/pytorch_bert_model", type=str,
+    parser.add_argument('-bert_model_dir', default="", type=str,
                         help=""" the path to the pretrained Bert model.""")
+    parser.add_argument('-pretrained_model_name', default="", type=str,
+                        help=""" the name of the  pretrained model""")
+
 
 
     # Transforer Model options
