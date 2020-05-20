@@ -112,7 +112,7 @@ def build_tm_model(opt, dicts):
         if opt.encoder_type == "text":
             encoder = TransformerEncoder(opt, bert_linear, positional_encoder, opt.encoder_type)
             # 这里 bert_model_dir 可以是pytorch提供的预训练模型，也可以是经过自己fine_tune的bert
-            bert_model = BertModel.from_pretrained(cache_dir=opt.bert_model_dir)
+            bert_model = BertModel.from_pretrained(cache_dir=opt.bert_model_dir, pretrained_model =opt.pretrained_model_name)
             replace_layer_norm(bert_model, "Transformer")
 
         else:
