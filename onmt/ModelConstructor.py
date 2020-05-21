@@ -113,9 +113,11 @@ def build_tm_model(opt, dicts):
             encoder = TransformerEncoder(opt, bert_linear, positional_encoder, opt.encoder_type)
             # 这里 bert_model_dir 可以是pytorch提供的预训练模型，也可以是经过自己fine_tune的bert
             if opt.bert_state_dict:
+                print("load the finetuned Bert")
                 finetuned_state_dict = torch.load(opt.bert_state_dict)
                 bert = BertModel.from_pretrained(cache_dir=opt.bert_config_dir, state_dict=finetuned_state_dict)
             else:
+                print("load Bert from Pytorch")
                 bert = BertModel.from_pretrained(cache_dir=opt.bert_config_dir)
             replace_layer_norm(bert, "Transformer")
 
