@@ -1,4 +1,4 @@
-1. this repo is aboutleveraging the pretrained model Bert to do nmt task. It inculdes:
+1. this repo is about leveraging the pretrained model Bert to do nmt task. It inculdes:
 
     1.1 directly use Bert to get the embedding vector (Bert frozen)
 
