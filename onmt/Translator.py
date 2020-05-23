@@ -71,6 +71,7 @@ class Translator(object):
             #     model = build_fusion(model_opt, checkpoint['dicts'])
             # else:
             #     model = build_model(model_opt, checkpoint['dicts'])
+            model_opt.not_load_bert_state = True
             model = build_model(model_opt, checkpoint['dicts'])
             
             # by me

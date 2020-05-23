@@ -215,7 +215,7 @@ def main():
                trainable=True,
             )
             model.add_module("scalar_mix", scalar_mix)
-
+        print(model)
       #  for name, param in model.bert_model.named_parameters():
             # print(name, param, param.requires_grad)
             # the params in bert_model which require gradient:
