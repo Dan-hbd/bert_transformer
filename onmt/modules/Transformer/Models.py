@@ -160,15 +160,14 @@ class TransformerEncoder(nn.Module):
 
             # before the .half(), bert_vecs is torch.cuda.FloatTensor, after : torch.cuda.HalfTensor
             if self.fp16:
-                #print("yes fp16")
                 bert_vecs = bert_vecs.half()
 
-            # 对bert 的词向量做dropout
-            emb = self.bert_dropout(bert_vecs)
             # 如果bert和transformer的hidden_size 不一致，做线性转换
             #print(self.vec_linear)
             if self.vec_linear:
                 emb = self.vec_linear(emb)
+            # 对bert 的词向量做dropout
+            emb = self.bert_dropout(bert_vecs)
 
         else:
             raise NotImplementedError
@@ -187,12 +186,7 @@ class TransformerEncoder(nn.Module):
         context = self.preprocess_layer(context)
 
         for i, layer in enumerate(self.layer_modules):
-
-            if len(self.layer_modules) - i <= onmt.Constants.checkpointing and self.training:
-                context = checkpoint(custom_layer(layer), context, mask_src)
-
-            else:
-                context = layer(context, mask_src)  # batch_size x len_src x d_model
+            context = layer(context, mask_src)  # batch_size x len_src x d_model
 
         # From Google T2T
         # if normalization is done in layer_preprocess, then it should also be done
