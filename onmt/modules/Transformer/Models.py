@@ -163,7 +163,6 @@ class TransformerEncoder(nn.Module):
                 bert_vecs = bert_vecs.half()
 
             # 如果bert和transformer的hidden_size 不一致，做线性转换
-            #print(self.vec_linear)
             if self.vec_linear:
                 emb = self.vec_linear(emb)
             # 对bert 的词向量做dropout
