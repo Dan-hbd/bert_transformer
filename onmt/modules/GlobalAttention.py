@@ -158,7 +158,6 @@ class MultiHeadAttention(nn.Module):
         v = v.contiguous().view(len_key, b * self.h, self.d_head).transpose(0, 1)
 
         q = q * (self.d_head ** -0.5)
-
         # get dotproduct softmax attns for each head
         attns = torch.bmm(q, k.transpose(1, 2))  # batch_size*h x len_query x len_key
 

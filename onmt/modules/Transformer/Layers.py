@@ -268,7 +268,6 @@ class DecoderLayer(nn.Module):
         query = self.preprocess_attn(input)
         
         out, _, buffer = self.multihead_tgt.step(query, query, query, mask_tgt, buffer=buffer)
-
         input = self.postprocess_attn(out, input)
         
         """ Context Attention layer 

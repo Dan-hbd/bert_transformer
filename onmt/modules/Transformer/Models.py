@@ -184,7 +184,6 @@ class TransformerEncoder(nn.Module):
         # B x T x H -> T x B x H
         # 只是emb加上positional encoding后做了一下transpose
         context = emb.transpose(0, 1)
-
         context = self.preprocess_layer(context)
 
         for i, layer in enumerate(self.layer_modules):
@@ -202,7 +201,6 @@ class TransformerEncoder(nn.Module):
         context = self.postprocess_layer(context)
 
         output_dict = {'context': context, 'src_mask': mask_src}
-
         # return context, mask_src
         return output_dict
 
@@ -376,7 +374,8 @@ class TransformerDecoder(nn.Module):
         buffers = decoder_state.attention_buffers
         atbs = decoder_state.tgt_atb
         mask_src = decoder_state.src_mask
-
+        #  context: [len, beam*batch, hidden]
+        #  mask_src: [beam*batch, 1, len ]
         if decoder_state.concat_input_seq == True:
             if decoder_state.input_seq is None:
                 decoder_state.input_seq = input
@@ -392,12 +391,12 @@ class TransformerDecoder(nn.Module):
         else:
             input_ = input
         """ Embedding: batch_size x 1 x d_model """
-        check = input_.gt(self.word_lut.num_embeddings)
+        # check = input_.gt(self.word_lut.num_embeddings)
+        # input [batch*beam, 1] emb: [batch*beam, 1, tgt_vocab] 
         emb = self.word_lut(input_)
 
         """ Adding positional encoding """
         if self.time == 'positional_encoding':
-            # print(emb.size())
             emb = emb * math.sqrt(self.model_size)
             emb = self.time_transformer(emb, t=input.size(1))
         else:
@@ -452,9 +451,8 @@ class TransformerDecoder(nn.Module):
         for i, layer in enumerate(self.layer_modules):
             buffer = buffers[i] if i in buffers else None
             assert (output.size(0) == 1)
-
+            #print(output.size(), context.size(),mask_tgt.size(),mask_src.size())
             output, coverage, buffer = layer.step(output, context, mask_tgt, mask_src, buffer=buffer)
-
             decoder_state.update_attention_buffer(buffer, i)
 
         # From Google T2T
@@ -690,7 +688,6 @@ class Transformer(NMTModel):
 class TransformerDecodingState(DecoderState):
 
     def __init__(self, src, tgt_atb, context, src_mask, beam_size=1, model_size=512, type=1):
-
         self.beam_size = beam_size
         self.model_size = model_size
         self.attention_buffers = dict()
@@ -732,6 +729,7 @@ class TransformerDecodingState(DecoderState):
             new_order = new_order.to(context.device)
             self.context = context.index_select(1, new_order)
             self.src = src.index_select(1, new_order)  # because src is batch first
+            # self.src_mask: [b*beam, 1,len]
             self.src_mask = src_mask.index_select(0, new_order)
             self.concat_input_seq = False
 

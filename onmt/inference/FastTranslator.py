@@ -205,7 +205,6 @@ class FastTranslator(Translator):
         # self.n_models = 1, 应该是average后的
         for i in range(self.n_models):
             decoder_states[i] = self.models[i].create_decoder_state(batch, beam_size, type=2)
-
         # Start decoding
         for step in range(max_len + 1):  # one extra step for EOS marker
             # reorder decoder internal states based on the prev choice of beams
@@ -217,10 +216,10 @@ class FastTranslator(Translator):
                 for i, model in enumerate(self.models):
                     decoder_states[i]._reorder_incremental_state(reorder_state)
 
+            # tokens [beam*batch, max_len+2]  decode_input: [beam*batch, 1]
             decode_input = tokens[:, :step + 1]
+
             lprobs, avg_attn_scores = self._decode(decode_input, decoder_states)
-            # print("lprobs:", lprobs)
-            # print("avg_attn_scores:", avg_attn_scores)
             avg_attn_scores = None
 
             lprobs[:, self.pad] = -math.inf  # never select pad

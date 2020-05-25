@@ -210,7 +210,7 @@ def main():
         if not opt.finetune_bert and opt.bert_scalar:
             scalar_mix = ScalarMix(
                onmt.Constants.BERT_LAYERS,
-               do_layer_norm=True,
+               do_layer_norm=False,
                initial_scalar_parameters=None,
                trainable=True,
             )

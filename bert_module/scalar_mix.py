@@ -3,7 +3,7 @@
 from typing import List
 import torch
 from torch.nn import ParameterList, Parameter
-from bert_module.scalar_util import tiny_value_of_dtype
+from bert_module.scalar_util import tiny_value_of_dtype, max_value_of_dtype
 
 class ScalarMix(torch.nn.Module):
     """
@@ -48,17 +48,22 @@ class ScalarMix(torch.nn.Module):
         When `do_layer_norm=True`, the `mask` is required input.  If the `tensors` are
         dimensioned  `(dim_0, ..., dim_{n-1}, dim_n)`, then the `mask` is dimensioned
         `(dim_0, ..., dim_{n-1})`, as in the typical case with `tensors` of shape
-        `(batch_size, timesteps, dim)` and `mask` of shape `(batch_size, timesteps)`.
+
+        tensors: [batch_size, timesteps, dim]  
+        mask  shape: [batch_size, timesteps]
         When `do_layer_norm=False` the `mask` is ignored.
         """
         assert (len(tensors) == self.mixture_size)
-
         def _do_layer_norm(tensor, broadcast_mask, num_elements_not_masked):
             tensor_masked = tensor * broadcast_mask
             mean = torch.sum(tensor_masked) / num_elements_not_masked
+            sum_value= torch.sum(((tensor_masked - mean) * broadcast_mask) ** 2)
+            # sum_value_max= torch.finfo(sum_value.dtype).max
+            # sum_value = sum_value if sum_value < sum_value_max else sum_value_max
             variance = (
-                torch.sum(((tensor_masked - mean) * broadcast_mask) ** 2) / num_elements_not_masked
+                sum_value / num_elements_not_masked
             )
+            print(variance) 
             return (tensor - mean) / torch.sqrt(variance + tiny_value_of_dtype(variance.dtype))
 
         normed_weights = torch.nn.functional.softmax(
@@ -68,9 +73,7 @@ class ScalarMix(torch.nn.Module):
         if torch.cuda.is_available():
             normed_weights = normed_weights.cuda()
             self.gamma = self.gamma.to('cuda')
-
         normed_weights = torch.split(normed_weights, split_size_or_sections=1)
-
         if not self.do_layer_norm:
             pieces = []
             for weight, tensor in zip(normed_weights, tensors):
@@ -89,7 +92,6 @@ class ScalarMix(torch.nn.Module):
                 pieces.append(
                     weight * _do_layer_norm(tensor, broadcast_mask, num_elements_not_masked)
                 )
-
             # print("gamma:",self.gamma)
             # print("gamma:",self.gamma.grad)
             # print("gamma:",self.gamma.requires_grad)
