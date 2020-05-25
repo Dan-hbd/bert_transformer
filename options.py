@@ -76,8 +76,12 @@ def make_parser(parser):
         help='Number of checkpointed layers in the Transformer') 
     parser.add_argument('-attn_dropout', type=float, default=0.1,
                         help='Dropout probability; applied on multi-head attention.')   
-    parser.add_argument('-emb_dropout', type=float, default=0.1,
-                        help='Dropout probability; applied on top of embedding.')
+
+    parser.add_argument('-enc_emb_dropout', type=float, default=0.1,
+                        help='Dropout probability; applied on top of embedding for the encoder.')
+    parser.add_argument('-dec_emb_dropout', type=float, default=0.1,
+                        help='Dropout probability; applied on top of embedding for the decoder.')
+
     parser.add_argument('-variational_dropout', action='store_true',
                         help='Apply variational dropout (same network per timestep)')
     parser.add_argument('-weight_norm', action='store_true',

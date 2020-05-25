@@ -37,7 +37,7 @@ def custom_build_model(opt, dict, lm=False):
         # by me
         scalar_mix = ScalarMix(
            onmt.Constants.BERT_LAYERS,
-           do_layer_norm=True,
+           do_layer_norm=False,
            initial_scalar_parameters=None,
            trainable=True,
         )

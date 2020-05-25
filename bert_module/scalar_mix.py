@@ -63,7 +63,6 @@ class ScalarMix(torch.nn.Module):
             variance = (
                 sum_value / num_elements_not_masked
             )
-            print(variance) 
             return (tensor - mean) / torch.sqrt(variance + tiny_value_of_dtype(variance.dtype))
 
         normed_weights = torch.nn.functional.softmax(
