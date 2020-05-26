@@ -65,6 +65,8 @@ def make_parser(parser):
     parser.add_argument('-bert_word_dropout', type=float, default=0.0,
                         help="""this is different from original word_dropout, we do drop the whole word,
                          but not the same words will be dropped at one time""")
+    parser.add_argument('-bertmask', type=float, default=0.0,
+                        help='set random positions to [MASK] ')
 
 
 

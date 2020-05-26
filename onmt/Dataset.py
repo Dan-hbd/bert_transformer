@@ -5,7 +5,7 @@ import torch
 from collections import defaultdict
 import onmt
 from onmt.speech.Augmenter import Augmenter
-from onmt.modules.WordDrop import switchout
+from onmt.modules.WordDrop import switchout, bertmask
 # from bert_module.bert_vecs import make_bert_vec
 
 """
@@ -118,6 +118,10 @@ class Batch(object):
         #     self.tensors['target_input'] = target_full[:  -1]
         #     self.tensors['target_output'] = target_full[1:]
         #     self.tensors['tgt_mask'] = self.tensors['target_output'].ne(onmt.Constants.PAD)
+
+    def bertmask(self, swrate):
+        # bertmask function ... currently works with only source text data
+        self.tensors['source'] = bertmask(self.tensors['source'], swrate, transpose=True)
 
     # down sampling the speech signal by simply concatenating n features (reshaping)
     def downsample(self, data):

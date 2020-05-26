@@ -377,7 +377,7 @@ class XETrainer(BaseTrainer):
 
         opt = self.opt
         model = self.model
-        optim = self.optim
+        # optim = self.optim
         
         # Try to load the save_file
         # checkpoint = None

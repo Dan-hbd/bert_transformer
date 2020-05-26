@@ -5,7 +5,7 @@ from onmt.modules.Transformer.Layers import EncoderLayer, DecoderLayer, Position
     PrePostProcessing
 from onmt.modules.BaseModel import NMTModel, Reconstructor, DecoderState
 import onmt
-from onmt.modules.WordDrop import embedded_dropout, embedded_dropou_bert, switchout
+from onmt.modules.WordDrop import embedded_dropout, switchout, bertmask
 from torch.utils.checkpoint import checkpoint
 from collections import defaultdict
 from onmt.utils import flip
@@ -85,6 +85,8 @@ class TransformerEncoder(nn.Module):
         self.cnn_downsampling = opt.cnn_downsampling
 
         self.switchout = opt.switchout
+        self.bertmask = opt.bertmask
+
         self.varitional_dropout = opt.variational_dropout
         self.fp16 = opt.fp16
 
@@ -462,6 +464,8 @@ class Transformer(NMTModel):
         super().__init__(bert, encoder, decoder, generator)
         self.model_size = self.decoder.model_size
         self.switchout = self.decoder.switchout
+        self.bertmask = self.encoder.bertmask
+
         self.tgt_vocab_size = self.decoder.word_lut.weight.size(0)
 
 
@@ -490,6 +494,10 @@ class Transformer(NMTModel):
         """
         if self.switchout > 0 and self.training:
             batch.switchout(self.switchout, self.src_vocab_size, self.tgt_vocab_size)
+        
+
+        if self.bertmask > 0 and self.training:
+            batch.bertmask(self.bertmask)
 
         src = batch.get('source')
         tgt = batch.get('target_input')
