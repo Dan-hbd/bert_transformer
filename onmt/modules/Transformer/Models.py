@@ -468,16 +468,10 @@ class Transformer(NMTModel):
 
         self.tgt_vocab_size = self.decoder.word_lut.weight.size(0)
 
-
-
-        # I don't know how to change it here
-        # if self.encoder.input_type == 'text':
-        #     # by me， 完蛋了，这里没有src_vocab_size了
-        #     self.src_vocab_size = self.encoder.word_lut.weight.size(0)
-        #     # self.src_vocab_size = self.encoder.word_lut.size(0)
-        # else:
-        #     self.src_vocab_size = 0
-
+        if self.encoder.input_type == 'text':
+            self.src_vocab_size = self.bert.embeddings.word_embeddings.weight.size(0)
+        else:
+            self.src_vocab_size = 0
     def reset_states(self):
         return
 
