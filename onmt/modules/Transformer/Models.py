@@ -77,8 +77,7 @@ class TransformerEncoder(nn.Module):
         self.dropout = opt.dropout
         self.word_dropout = opt.word_dropout
         self.attn_dropout = opt.attn_dropout
-        self.emb_dropout = opt.emb_dropout
-        self.bert_dropout = nn.Dropout(opt.bert_output_dropout)
+        self.enc_emb_dropout = opt.enc_emb_dropout
 
         self.time = opt.time
         self.version = opt.version
@@ -125,7 +124,7 @@ class TransformerEncoder(nn.Module):
         elif opt.time == 'lstm':
             self.time_transformer = nn.LSTM(self.model_size, self.model_size, 1, batch_first=True)
 
-        self.preprocess_layer = PrePostProcessing(self.model_size, self.emb_dropout, sequence='d',
+        self.preprocess_layer = PrePostProcessing(self.model_size, self.enc_emb_dropout, sequence='d',
                                                   variational=self.varitional_dropout)
 
         self.postprocess_layer = PrePostProcessing(self.model_size, 0, sequence='n')
@@ -165,9 +164,8 @@ class TransformerEncoder(nn.Module):
             # 如果bert和transformer的hidden_size 不一致，做线性转换
             if self.vec_linear:
                 emb = self.vec_linear(emb)
-            # 对bert 的词向量做dropout
-            emb = self.bert_dropout(bert_vecs)
-
+            else:
+                emb = bert_vecs
         else:
             raise NotImplementedError
 
@@ -218,7 +216,7 @@ class TransformerDecoder(nn.Module):
         self.dropout = opt.dropout
         self.word_dropout = opt.word_dropout
         self.attn_dropout = opt.attn_dropout
-        self.emb_dropout = opt.emb_dropout
+        self.dec_emb_dropout = opt.dec_emb_dropout
         self.time = opt.time
         self.version = opt.version
         self.encoder_type = opt.encoder_type
@@ -235,7 +233,7 @@ class TransformerDecoder(nn.Module):
         else:
             raise NotImplementedError
 
-        self.preprocess_layer = PrePostProcessing(self.model_size, self.emb_dropout, sequence='d',
+        self.preprocess_layer = PrePostProcessing(self.model_size, self.dec_emb_dropout, sequence='d',
                                                   variational=self.variational_dropout)
 
         self.postprocess_layer = PrePostProcessing(self.model_size, 0, sequence='n')
